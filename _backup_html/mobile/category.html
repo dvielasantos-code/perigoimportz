@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html class="dark" lang="pt-BR">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>PERIGOIMPORTZ | Coleção Mobile</title>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Inter:wght@400;500&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+          tailwind.config = {
+            darkMode: "class",
+            theme: {
+              extend: {
+                colors: {
+                  "surface-container-high": "#2a2a2a",
+                  "surface-container-low": "#1b1b1b",
+                  "outline": "#919191",
+                  "on-surface-variant": "#c6c6c6",
+                  "on-primary-fixed": "#ffffff",
+                  "primary-fixed-dim": "#454747",
+                  "on-surface": "#e2e2e2",
+                  "on-secondary": "#1b1c1c",
+                  "surface-tint": "#c6c6c7",
+                  "error": "#ffb4ab",
+                  "background": "#131313",
+                  "inverse-on-surface": "#303030",
+                  "on-background": "#e2e2e2",
+                  "surface-dim": "#131313",
+                  "primary": "#ffffff",
+                  "tertiary-container": "#919090",
+                  "on-secondary-container": "#e5e2e1",
+                  "error-container": "#93000a",
+                  "on-error-container": "#ffdad6",
+                  "secondary-fixed-dim": "#adabaa",
+                  "outline-variant": "#474747",
+                  "on-primary": "#1a1c1c",
+                  "on-tertiary-fixed-variant": "#e4e2e1",
+                  "tertiary-fixed-dim": "#474747",
+                  "secondary-fixed": "#c8c6c5",
+                  "on-secondary-fixed-variant": "#3c3b3b",
+                  "on-tertiary": "#1b1c1c",
+                  "surface-container-lowest": "#0e0e0e",
+                  "tertiary-fixed": "#5f5e5e",
+                  "surface-container": "#1f1f1f",
+                  "surface-bright": "#393939",
+                  "inverse-surface": "#e2e2e2",
+                  "on-primary-container": "#000000",
+                  "surface": "#131313",
+                  "on-error": "#690005",
+                  "surface-variant": "#353535",
+                  "on-tertiary-container": "#000000",
+                  "on-secondary-fixed": "#1b1c1c",
+                  "inverse-primary": "#5d5f5f",
+                  "surface-container-highest": "#353535",
+                  "primary-fixed": "#5d5f5f",
+                  "tertiary": "#e4e2e1",
+                  "on-primary-fixed-variant": "#e2e2e2",
+                  "primary-container": "#d4d4d4",
+                  "on-tertiary-fixed": "#ffffff",
+                  "secondary-container": "#474746",
+                  "secondary": "#c8c6c5"
+                },
+                fontFamily: {
+                  "headline": ["Manrope"],
+                  "body": ["Manrope"],
+                  "label": ["Inter"]
+                },
+                borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+              },
+            },
+          }
+    </script>
+    <style>
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        body { background-color: #131313; color: #e2e2e2; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body selection:bg-primary selection:text-on-primary">
+    <!-- Header -->
+    <header class="fixed top-0 w-full z-50 bg-[#000000] flex justify-between items-center px-8 py-6 max-w-full">
+        <div class="flex items-center gap-4 cursor-pointer" onclick="window.location.href='index.html'">
+            <span class="material-symbols-outlined text-white">menu</span>
+            <h1 class="text-2xl font-black tracking-tighter text-white font-['Manrope'] uppercase">PERIGOIMPORTZ</h1>
+        </div>
+        <div class="flex items-center gap-4">
+            <span class="material-symbols-outlined text-white">search</span>
+        </div>
+    </header>
+
+    <main class="pt-28 px-6 min-h-screen">
+        <!-- Header Section -->
+        <section class="mb-12">
+            <h2 id="page-title" class="text-5xl font-extrabold font-headline tracking-[-0.04em] mb-8 text-primary">Coleção</h2>
+            <!-- Filters -->
+            <div id="mobile-filters" class="flex gap-3 overflow-x-auto pb-4 no-scrollbar">
+                <!-- Categories injected here -->
+            </div>
+        </section>
+
+        <!-- Product Grid -->
+        <div id="product-grid" class="space-y-12">
+            <!-- Injected via JS -->
+        </div>
+
+        <div id="no-products" class="hidden text-center py-20">
+            <p class="text-outline text-xl">Nenhum produto encontrado.</p>
+            <button onclick="window.location.href='category.html'" class="mt-4 text-primary underline">Ver tudo</button>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full rounded-t-[3rem] mt-20 bg-[#0e0e0e] flex flex-col items-center px-12 py-16">
+        <div class="text-center mb-8">
+            <h2 class="font-bold text-lg text-white mb-2">PERIGOIMPORTZ</h2>
+            <p id="footer-address" class="text-xs text-neutral-400"></p>
+        </div>
+        <a id="whatsapp-footer" class="text-white underline text-sm" href="#">WhatsApp</a>
+    </footer>
+
+    <script src="../js/data.js"></script>
+    <script src="../js/shared.js"></script>
+    <script>
+        const categoryId = shared.getParam('category');
+        const searchTerm = shared.getParam('search');
+
+        // Renderiza filtros
+        const filtersContainer = document.getElementById('mobile-filters');
+        data.categories.forEach(cat => {
+            const btn = document.createElement('button');
+            const active = categoryId === cat.id;
+            btn.className = `bg-surface-container-low px-6 py-3 rounded-full text-on-surface whitespace-nowrap border ${active ? 'border-primary' : 'border-outline-variant/20'}`;
+            btn.onclick = () => window.location.href = `category.html?category=${cat.id}`;
+            btn.innerHTML = `<span class="font-label text-xs font-medium uppercase tracking-widest">${cat.name}</span>`;
+            filtersContainer.appendChild(btn);
+        });
+
+        // Limpa Filtro
+        if(categoryId || searchTerm) {
+            const clearBtn = document.createElement('button');
+            clearBtn.className = "px-6 py-3 bg-white/10 rounded-full text-[10px] font-bold uppercase tracking-widest text-primary";
+            clearBtn.innerText = "Limpar";
+            clearBtn.onclick = () => window.location.href = 'category.html';
+            filtersContainer.appendChild(clearBtn);
+        }
+
+        // Título
+        const titleEl = document.getElementById('page-title');
+        if (categoryId) {
+            const cat = data.categories.find(c => c.id === categoryId);
+            titleEl.innerText = cat ? cat.name : 'Coleção';
+        } else if (searchTerm) {
+            titleEl.innerText = `Resultados`;
+        }
+
+        // Renderiza Grid
+        const grid = document.getElementById('product-grid');
+        const filtered = shared.getFilteredProducts(categoryId, searchTerm);
+        
+        if (filtered.length === 0) {
+            document.getElementById('no-products').classList.remove('hidden');
+        } else {
+            filtered.forEach(p => {
+                grid.innerHTML += shared.renderMobileProductCard(p);
+            });
+        }
+
+        document.getElementById('footer-address').innerText = data.address;
+        document.getElementById('whatsapp-footer').href = shared.getWhatsAppLink();
+    </script>
+</body>
+</html>

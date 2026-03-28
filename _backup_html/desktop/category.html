@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html class="dark" lang="pt-BR">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>PERIGOIMPORTZ | Coleção</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+          tailwind.config = {
+            darkMode: "class",
+            theme: {
+              extend: {
+                colors: {
+                  "surface-container-high": "#2a2a2a",
+                  "surface-container-low": "#1b1b1b",
+                  "outline": "#919191",
+                  "on-surface-variant": "#c6c6c6",
+                  "on-primary-fixed": "#ffffff",
+                  "primary-fixed-dim": "#454747",
+                  "on-surface": "#e2e2e2",
+                  "on-secondary": "#1b1c1c",
+                  "surface-tint": "#c6c6c7",
+                  "error": "#ffb4ab",
+                  "background": "#131313",
+                  "inverse-on-surface": "#303030",
+                  "on-background": "#e2e2e2",
+                  "surface-dim": "#131313",
+                  "primary": "#ffffff",
+                  "tertiary-container": "#919090",
+                  "on-secondary-container": "#e5e2e1",
+                  "error-container": "#93000a",
+                  "on-error-container": "#ffdad6",
+                  "secondary-fixed-dim": "#adabaa",
+                  "outline-variant": "#474747",
+                  "on-primary": "#1a1c1c",
+                  "on-tertiary-fixed-variant": "#e4e2e1",
+                  "tertiary-fixed-dim": "#474747",
+                  "secondary-fixed": "#c8c6c5",
+                  "on-secondary-fixed-variant": "#3c3b3b",
+                  "on-tertiary": "#1b1c1c",
+                  "surface-container-lowest": "#0e0e0e",
+                  "tertiary-fixed": "#5f5e5e",
+                  "surface-container": "#1f1f1f",
+                  "surface-bright": "#393939",
+                  "inverse-surface": "#e2e2e2",
+                  "on-primary-container": "#000000",
+                  "surface": "#131313",
+                  "on-error": "#690005",
+                  "surface-variant": "#353535",
+                  "on-tertiary-container": "#000000",
+                  "on-secondary-fixed": "#1b1c1c",
+                  "inverse-primary": "#5d5f5f",
+                  "surface-container-highest": "#353535",
+                  "primary-fixed": "#5d5f5f",
+                  "tertiary": "#e4e2e1",
+                  "on-primary-fixed-variant": "#e2e2e2",
+                  "primary-container": "#d4d4d4",
+                  "on-tertiary-fixed": "#ffffff",
+                  "secondary-container": "#474746",
+                  "secondary": "#c8c6c5"
+                },
+                fontFamily: {
+                  "headline": ["Manrope"],
+                  "body": ["Manrope"],
+                  "label": ["Inter"]
+                },
+                borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+              },
+            },
+          }
+    </script>
+    <style>
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        body { background-color: #131313; color: #e2e2e2; font-family: 'Manrope', sans-serif; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Header -->
+    <header class="fixed top-0 w-full z-50 bg-[#000000] text-white flex justify-between items-center px-8 py-6 max-w-full">
+        <div class="flex items-center gap-6 cursor-pointer" onclick="window.location.href='index.html'">
+            <button class="hover:opacity-80 transition-opacity">
+                <span class="material-symbols-outlined text-2xl">menu</span>
+            </button>
+            <h1 class="text-2xl font-black tracking-tighter font-['Manrope'] uppercase">PERIGOIMPORTZ</h1>
+        </div>
+        <nav class="hidden md:flex items-center gap-12">
+            <a class="font-bold font-['Manrope'] hover:opacity-80 transition-opacity" href="category.html">Coleção</a>
+            <a class="text-neutral-400 font-['Manrope'] hover:opacity-80 transition-opacity" href="category.html">Novidades</a>
+            <a class="text-neutral-400 font-['Manrope'] hover:opacity-80 transition-opacity" href="category.html">Arquivo</a>
+        </nav>
+        <div class="flex items-center gap-6">
+            <div class="relative group hidden md:block">
+                <input id="list-search" type="text" placeholder="Buscar..." class="bg-[#0e0e0e] border-none rounded-full py-2 pl-10 pr-4 text-sm focus:ring-1 focus:ring-primary/20 w-48 transition-all"/>
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 text-lg">search</span>
+            </div>
+            <button class="hover:opacity-80 transition-opacity"><span class="material-symbols-outlined text-2xl">shopping_bag</span></button>
+        </div>
+    </header>
+
+    <main class="pt-32 px-8 max-w-[1600px] mx-auto pb-20">
+        <!-- Hero Title Section -->
+        <section class="mb-16 flex flex-col md:flex-row md:items-end justify-between gap-8">
+            <div>
+                <span id="page-subtitle" class="font-label text-xs uppercase tracking-[0.2em] text-outline mb-4 block">Curadoria Exclusiva</span>
+                <h2 id="page-title" class="text-7xl font-headline font-extrabold tracking-[-0.04em] text-on-background">Coleção</h2>
+            </div>
+            <div id="category-filters" class="flex gap-4 overflow-x-auto pb-4 md:pb-0 no-scrollbar">
+                <!-- Categories injected here -->
+            </div>
+        </section>
+
+        <!-- Product Grid -->
+        <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-16">
+            <!-- Injected via JS -->
+        </div>
+
+        <div id="no-products" class="hidden text-center py-20">
+            <p class="text-outline text-xl">Nenhum produto encontrado.</p>
+            <button onclick="window.location.href='category.html'" class="mt-4 text-primary underline">Ver tudo</button>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full rounded-t-[3rem] mt-20 bg-[#0e0e0e] text-white flex flex-col md:flex-row justify-between items-center px-12 py-16">
+        <div class="flex flex-col gap-4 items-center md:items-start mb-8 md:mb-0">
+            <span class="font-bold text-lg">PERIGOIMPORTZ</span>
+            <p id="footer-address" class="font-['Manrope'] text-sm leading-[1.6] text-neutral-400"></p>
+        </div>
+        <div class="flex gap-12 items-center">
+            <a id="whatsapp-footer" class="font-['Manrope'] text-sm text-white underline flex items-center gap-2" href="#">WhatsApp</a>
+        </div>
+    </footer>
+
+    <script src="../js/data.js"></script>
+    <script src="../js/shared.js"></script>
+    <script>
+        const categoryId = shared.getParam('category');
+        const searchTerm = shared.getParam('search');
+
+        // Atualiza títulos
+        const titleEl = document.getElementById('page-title');
+        const subtitleEl = document.getElementById('page-subtitle');
+        
+        if (categoryId) {
+            const cat = data.categories.find(c => c.id === categoryId);
+            titleEl.innerText = cat ? cat.name : 'Coleção';
+            subtitleEl.innerText = `Categoria // ${cat ? cat.name : 'Arquivo'}`;
+        } else if (searchTerm) {
+            titleEl.innerText = `"${searchTerm}"`;
+            subtitleEl.innerText = `Resultados da busca`;
+        }
+
+        // Renderiza filtros
+        const filtersContainer = document.getElementById('category-filters');
+        data.categories.forEach(cat => {
+            const btn = document.createElement('button');
+            const active = categoryId === cat.id;
+            btn.className = `flex items-center gap-2 px-8 py-4 ${active ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-background'} rounded-full hover:bg-surface-container-highest transition-colors whitespace-nowrap`;
+            btn.onclick = () => window.location.href = `category.html?category=${cat.id}`;
+            btn.innerHTML = `<span class="material-symbols-outlined text-sm">${cat.icon}</span><span class="font-label text-sm font-medium">${cat.name}</span>`;
+            filtersContainer.appendChild(btn);
+        });
+
+        // Limpa Filtro se houver algum ativo
+        if(categoryId || searchTerm) {
+            const clearBtn = document.createElement('button');
+            clearBtn.className = "px-6 py-4 border border-outline rounded-full text-xs font-bold uppercase tracking-widest hover:bg-white/10 transition-all";
+            clearBtn.innerText = "Limpar Filtros";
+            clearBtn.onclick = () => window.location.href = 'category.html';
+            filtersContainer.appendChild(clearBtn);
+        }
+
+        // Renderiza Grid
+        const grid = document.getElementById('product-grid');
+        const filtered = shared.getFilteredProducts(categoryId, searchTerm);
+        
+        if (filtered.length === 0) {
+            document.getElementById('no-products').classList.remove('hidden');
+        } else {
+            filtered.forEach(p => {
+                grid.innerHTML += shared.renderProductCard(p);
+            });
+        }
+
+        // Setup Footer
+        document.getElementById('footer-address').innerText = `PERIGOIMPORTZ © 2024. ${data.address}`;
+        document.getElementById('whatsapp-footer').href = shared.getWhatsAppLink();
+        
+        // Setup Search
+        shared.initSearch('#list-search');
+    </script>
+</body>
+</html>

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html class="dark" lang="pt-br">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>PERIGOIMPORTZ | Mobile Home</title>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+          tailwind.config = {
+            darkMode: "class",
+            theme: {
+              extend: {
+                colors: {
+                  "surface-container-high": "#2a2a2a",
+                  "surface-container-low": "#1b1b1b",
+                  "outline": "#919191",
+                  "on-surface-variant": "#c6c6c6",
+                  "on-primary-fixed": "#ffffff",
+                  "primary-fixed-dim": "#454747",
+                  "on-surface": "#e2e2e2",
+                  "on-secondary": "#1b1c1c",
+                  "surface-tint": "#c6c6c7",
+                  "error": "#ffb4ab",
+                  "background": "#131313",
+                  "inverse-on-surface": "#303030",
+                  "on-background": "#e2e2e2",
+                  "surface-dim": "#131313",
+                  "primary": "#ffffff",
+                  "tertiary-container": "#919090",
+                  "on-secondary-container": "#e5e2e1",
+                  "error-container": "#93000a",
+                  "on-error-container": "#ffdad6",
+                  "secondary-fixed-dim": "#adabaa",
+                  "outline-variant": "#474747",
+                  "on-primary": "#1a1c1c",
+                  "on-tertiary-fixed-variant": "#e4e2e1",
+                  "tertiary-fixed-dim": "#474747",
+                  "secondary-fixed": "#c8c6c5",
+                  "on-secondary-fixed-variant": "#3c3b3b",
+                  "on-tertiary": "#1b1c1c",
+                  "surface-container-lowest": "#0e0e0e",
+                  "tertiary-fixed": "#5f5e5e",
+                  "surface-container": "#1f1f1f",
+                  "surface-bright": "#393939",
+                  "inverse-surface": "#e2e2e2",
+                  "on-primary-container": "#000000",
+                  "surface": "#131313",
+                  "on-error": "#690005",
+                  "surface-variant": "#353535",
+                  "on-tertiary-container": "#000000",
+                  "on-secondary-fixed": "#1b1c1c",
+                  "inverse-primary": "#5d5f5f",
+                  "surface-container-highest": "#353535",
+                  "primary-fixed": "#5d5f5f",
+                  "tertiary": "#e4e2e1",
+                  "on-primary-fixed-variant": "#e2e2e2",
+                  "primary-container": "#d4d4d4",
+                  "on-tertiary-fixed": "#ffffff",
+                  "secondary-container": "#474746",
+                  "secondary": "#c8c6c5"
+                },
+                fontFamily: {
+                  "headline": ["Manrope"],
+                  "body": ["Manrope"],
+                  "label": ["Inter"]
+                },
+                borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+              },
+            },
+          }
+    </script>
+    <style>
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        body { background-color: #131313; color: #e2e2e2; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body antialiased">
+    <!-- Header -->
+    <header class="fixed top-0 w-full z-50 bg-[#000000] flex justify-between items-center px-8 py-6 max-w-full">
+        <div class="flex items-center gap-4" onclick="window.location.href='index.html'">
+            <span class="material-symbols-outlined text-white">menu</span>
+            <h1 class="text-2xl font-black tracking-tighter text-white font-['Manrope'] uppercase">PERIGOIMPORTZ</h1>
+        </div>
+        <div class="flex items-center gap-4">
+            <span class="material-symbols-outlined text-white">search</span>
+        </div>
+    </header>
+
+    <main class="pt-24 pb-12">
+        <!-- Hero -->
+        <section class="px-4 mb-12">
+            <div class="relative w-full aspect-[4/5] overflow-hidden rounded-xl">
+                <img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBdso03s2h1V8LfKMtiajCAAMOq8t0GfkW8B4cTVQeQO29ytbjJfXzkkYkfIOwWCOMCyN_PV81XZfRNn6deAxRSdOrSRh8P3ZvBFwd5phxoW3KWlygiW6vJGPAaO8j2S1IvWzuKpbwF-UGFHIyUXuU6xzn3lsa9pQxb03y0T7rXzXgFH4K00IYnefqSNR-SIYCJMbdGHoE-_DzEZcmITZZwHfzHQRwA-4qFB6KRIBMNNdZTdwXrkozGQke_Q_FOZdSfHWE5FaCosrgd"/>
+                <div class="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent flex flex-col justify-end p-8">
+                    <p class="font-label text-sm uppercase tracking-widest mb-2 text-primary">Nova Coleção</p>
+                    <h2 class="text-4xl font-extrabold tracking-tighter leading-none mb-6 font-headline">O CURADOR OBSCURO.</h2>
+                    <button class="bg-primary text-on-primary font-bold py-4 px-8 rounded-full w-fit" onclick="window.location.href='category.html'">Explorar Arquivo</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Search Bar -->
+        <section class="px-6 mb-12">
+            <div class="relative">
+                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">search</span>
+                <input id="mobile-search" class="w-full bg-surface-container-high border-none rounded-lg py-4 pl-12 pr-4 text-on-surface font-label focus:ring-1 focus:ring-primary/20 transition-all" placeholder="Buscar no catálogo..." type="text"/>
+            </div>
+        </section>
+
+        <!-- Dynamic Categories Carousel -->
+        <section class="px-6 mb-20">
+            <h3 class="text-xs font-label uppercase tracking-[0.2em] text-outline mb-6">Categorias Principais</h3>
+            <div id="mobile-categories" class="flex overflow-x-auto gap-4 pb-4 no-scrollbar snap-x">
+                <!-- Injected via JS -->
+            </div>
+        </section>
+
+        <!-- Featured Products -->
+        <section class="px-6 mb-20">
+            <div class="flex justify-between items-end mb-8">
+                <div>
+                    <h3 class="text-2xl font-black font-headline tracking-tighter uppercase">Destaques</h3>
+                    <p class="text-sm text-outline font-label">Curadoria exclusiva</p>
+                </div>
+                <span class="text-xs font-bold uppercase tracking-tighter border-b border-primary pb-1" onclick="window.location.href='category.html'">Ver todos</span>
+            </div>
+            <div id="mobile-featured" class="space-y-12">
+                <!-- Injected via JS -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-[#0e0e0e] w-full rounded-t-[3rem] mt-20 flex flex-col items-center px-12 py-16">
+        <div class="text-center mb-8">
+            <h2 class="font-bold text-lg text-white mb-2 uppercase">PERIGOIMPORTZ</h2>
+            <p id="footer-address" class="text-sm text-neutral-400"></p>
+        </div>
+        <a id="whatsapp-footer" class="flex items-center gap-2 text-white font-['Manrope'] text-sm underline" href="#">WhatsApp</a>
+    </footer>
+
+    <script src="../js/data.js"></script>
+    <script src="../js/shared.js"></script>
+    <script>
+        // Categorias Mobile
+        const categoriesContainer = document.getElementById('mobile-categories');
+        data.categories.forEach(cat => {
+            const div = document.createElement('div');
+            div.className = "min-w-[120px] snap-center shrink-0 flex flex-col items-center justify-center p-6 bg-surface-container-low rounded-xl hover:bg-surface-container-high transition-colors aspect-square text-center";
+            div.onclick = () => window.location.href = `category.html?category=${cat.id}`;
+            div.innerHTML = `
+                <span class="material-symbols-outlined mb-2 text-primary text-2xl">${cat.icon}</span>
+                <span class="text-[10px] font-label font-bold uppercase tracking-tight">${cat.name}</span>
+            `;
+            categoriesContainer.appendChild(div);
+        });
+
+        // Destaques Mobile
+        const featuredContainer = document.getElementById('mobile-featured');
+        const featured = data.products.filter(p => p.featured && p.status === 'ativo');
+        featured.forEach(p => {
+            featuredContainer.innerHTML += shared.renderMobileProductCard(p);
+        });
+
+        // Footer e WhatsApp
+        document.getElementById('footer-address').innerText = data.address;
+        document.getElementById('whatsapp-footer').href = shared.getWhatsAppLink();
+
+        // Search
+        shared.initSearch('#mobile-search', true);
+    </script>
+</body>
+</html>

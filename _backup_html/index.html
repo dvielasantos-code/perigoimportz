@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PERIGOIMPORTZ | Carregando</title>
+    <style>
+        body { margin: 0; background: #131313; height: 100vh; display: flex; justify-content: center; align-items: center; font-family: sans-serif; }
+        .spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1); border-radius: 50%; border-top-color: #fff; animation: spin 1s ease-in-out infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+    <script>
+        const isMobile = window.innerWidth < 768 || /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        window.location.replace((isMobile ? "mobile/index.html" : "desktop/index.html") + window.location.search);
+    </script>
+</head>
+<body><div class="spinner"></div></body>
+</html>
