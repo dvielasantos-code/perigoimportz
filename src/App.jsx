@@ -1,26 +1,25 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { useDevice } from './hooks/useDevice';
 
-// Vamos importar nossas Páginas Dinâmicas aqui
 import DesktopHome from './pages/DesktopHome';
 import MobileHome from './pages/MobileHome';
+import CategoryPage from './pages/CategoryPage';
 
 function App() {
   const isMobile = useDevice();
 
   return (
     <BrowserRouter>
-      {/* Botão Global WhatsApp Injection poderia ficar aqui */}
       <Routes>
         <Route 
           path="/" 
           element={isMobile ? <MobileHome /> : <DesktopHome />} 
         />
-        {/* <Route path="/admin" element={<AdminPanel />} /> */}
+        <Route path="/categoria/:categoryId" element={<CategoryPage />} />
+        <Route path="/categoria/:categoryId/:subId" element={<CategoryPage />} />
       </Routes>
     </BrowserRouter>
   );
 }
-
 
 export default App;

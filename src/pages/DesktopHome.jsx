@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useProducts } from '../hooks/useProducts';
 import { data } from '../data';
 import SideMenu from '../components/SideMenu';
@@ -6,13 +7,13 @@ import WhatsAppButton from '../components/WhatsAppButton';
 import AutoCarousel from '../components/AutoCarousel';
 
 export default function DesktopHome() {
-  const { products, loading } = useProducts();
+  const { products } = useProducts();
   const featured = products.filter(p => p.featured && p.status === 'ativo');
   const [menuOpen, setMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <div className="bg-background text-on-background min-h-screen pb-12">
-      {/* Side Menu */}
       <SideMenu isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
 
       {/* Header */}
@@ -27,10 +28,9 @@ export default function DesktopHome() {
             <input type="text" placeholder="Buscar no arquivo..." className="w-full bg-[#0e0e0e] border-none rounded-full py-3 pl-12 pr-4 text-sm focus:ring-1 focus:ring-primary/20 placeholder-neutral-400 transition-all font-['Manrope'] text-white" />
           </div>
         </div>
-        {/* Carrinho removido */}
       </header>
 
-      {/* 1. Banner colando no header - pt-[88px] = altura exata do header */}
+      {/* Banner */}
       <main className="pt-[88px]">
         <section className="mb-20">
           <div className="relative w-full aspect-video md:aspect-[21/7] overflow-hidden group">
@@ -45,12 +45,17 @@ export default function DesktopHome() {
           </div>
         </section>
 
-        {/* 3. Categories - Auto Carousel com itens menores para caber 5+ */}
+        {/* Categories - 5 visíveis, carrossel auto, cards clicáveis */}
         <section className="px-8 mb-32">
           <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-white/50 mb-6 font-['Inter']">Categorias Principais</h3>
           <AutoCarousel speed={0.4} gap={16}>
             {data.categories.map(cat => (
-              <div key={cat.id} style={{ width: 'calc((100vw - 64px - 64px) / 5)' }} className="shrink-0 group relative aspect-[4/3] rounded-xl overflow-hidden bg-surface-container-low flex flex-col items-center justify-center cursor-pointer hover:bg-surface-container transition-colors duration-500">
+              <div 
+                key={cat.id} 
+                onClick={() => navigate(`/categoria/${cat.id}`)}
+                style={{ width: 'calc((100vw - 64px - 64px) / 5)' }} 
+                className="shrink-0 group relative aspect-[4/3] rounded-xl overflow-hidden bg-surface-container-low flex flex-col items-center justify-center cursor-pointer hover:bg-surface-container transition-colors duration-500"
+              >
                 <span className="material-symbols-outlined text-3xl mb-3 group-hover:scale-110 transition-transform duration-500 text-white">{cat.icon}</span>
                 <span className="font-['Manrope'] font-bold text-base tracking-tight text-white">{cat.name}</span>
               </div>
@@ -58,7 +63,7 @@ export default function DesktopHome() {
           </AutoCarousel>
         </section>
 
-        {/* Featured Products - 5. Fontes melhoradas */}
+        {/* Featured Products */}
         <section className="px-8 mb-32">
           <div className="flex justify-between items-end mb-12">
             <div>
@@ -68,23 +73,28 @@ export default function DesktopHome() {
             <a href="#" className="text-sm font-bold underline underline-offset-8 tracking-tighter hover:text-white transition-colors text-white/60">VER TUDO</a>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {featured.map(p => (
               <div key={p.id} className="group cursor-pointer">
-                <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-surface-container-low mb-6 transition-transform duration-500 hover:scale-[1.02]">
+                <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-surface-container-low mb-5 transition-transform duration-500 hover:scale-[1.02]">
                   <img src={p.image} alt={p.name} className="w-full h-full object-cover grayscale brightness-90 group-hover:brightness-100 transition-all duration-700" />
                   {p.featured && (
-                    <div className="absolute top-6 left-6">
+                    <div className="absolute top-5 left-5">
                       <span className="bg-primary text-on-primary px-4 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-widest">Destaque</span>
                     </div>
                   )}
+                  {p.brand && (
+                    <div className="absolute bottom-5 right-5">
+                      <span className="bg-black/60 backdrop-blur-sm text-white/80 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">{p.brand}</span>
+                    </div>
+                  )}
                 </div>
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-1.5">
                   <div className="flex justify-between items-start">
-                    <h3 className="font-['Manrope'] text-xl font-extrabold tracking-tighter uppercase text-white">{p.name}</h3>
-                    <span className="font-['Inter'] text-lg font-bold text-white">R$ {p.price.toFixed(2)}</span>
+                    <h3 className="font-['Manrope'] text-lg font-extrabold tracking-tighter uppercase text-white">{p.name}</h3>
+                    <span className="font-['Inter'] text-base font-bold text-white shrink-0 ml-3">R$ {p.price.toFixed(0)}</span>
                   </div>
-                  <p className="text-white/50 text-sm font-medium line-clamp-1">{p.description}</p>
+                  <p className="text-white/40 text-sm font-medium line-clamp-1">{p.description}</p>
                 </div>
               </div>
             ))}
@@ -98,7 +108,6 @@ export default function DesktopHome() {
         <p className="font-['Manrope'] text-sm leading-[1.6] tracking-tight text-white/40 mt-2 font-medium">{data.address}</p>
       </footer>
 
-      {/* 6. WhatsApp Flutuante */}
       <WhatsAppButton />
     </div>
   );
