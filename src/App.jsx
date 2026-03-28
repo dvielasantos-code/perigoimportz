@@ -5,6 +5,7 @@ import DesktopHome from './pages/DesktopHome';
 import MobileHome from './pages/MobileHome';
 import CategoryPage from './pages/CategoryPage';
 import ProductPage from './pages/ProductPage';
+import AdminPage from './pages/AdminPage';
 import ScrollToTop from './components/ScrollToTop';
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
         <Route path="/categoria/:categoryId" element={<CategoryPage />} />
         <Route path="/categoria/:categoryId/:subId" element={<CategoryPage />} />
         <Route path="/produto/:productId" element={<ProductPage />} />
+        <Route path="/admin/*" element={<AdminPage />} />
       </Routes>
     </BrowserRouter>
   );
