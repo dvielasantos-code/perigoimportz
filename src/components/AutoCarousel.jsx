@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, Children, cloneElement } from 'react';
 
 export default function AutoCarousel({ children, speed = 0.5, gap = 16 }) {
   const outerRef = useRef(null);
@@ -6,34 +6,31 @@ export default function AutoCarousel({ children, speed = 0.5, gap = 16 }) {
   const animRef = useRef(null);
   const posRef = useRef(0);
   const pausedRef = useRef(false);
+  const setWidthRef = useRef(0);
+
+  // Renderizar filhos 3x em React (assim os handlers de click funcionam em todos)
+  const childArray = Children.toArray(children);
+  const tripled = [...childArray, ...childArray, ...childArray];
 
   useEffect(() => {
-    const outer = outerRef.current;
     const inner = innerRef.current;
-    if (!outer || !inner) return;
+    if (!inner || childArray.length === 0) return;
 
-    // Medir largura do conteúdo original (sem clones)
-    const items = inner.children;
-    const originalCount = items.length;
-
-    // Clonar todos os itens pra criar o loop infinito
-    for (let i = 0; i < originalCount; i++) {
-      const clone = items[i].cloneNode(true);
-      clone.setAttribute('aria-hidden', 'true');
-      inner.appendChild(clone);
+    // Calcular largura de 1 set (original)
+    const itemCount = childArray.length;
+    let totalWidth = 0;
+    for (let i = 0; i < itemCount; i++) {
+      if (inner.children[i]) {
+        totalWidth += inner.children[i].offsetWidth + gap;
+      }
     }
-
-    // Calcular largura de 1 set completo (original)
-    let setWidth = 0;
-    for (let i = 0; i < originalCount; i++) {
-      setWidth += items[i].offsetWidth + gap;
-    }
+    setWidthRef.current = totalWidth;
 
     const animate = () => {
-      if (!pausedRef.current) {
+      if (!pausedRef.current && setWidthRef.current > 0) {
         posRef.current += speed;
-        if (posRef.current >= setWidth) {
-          posRef.current = 0;
+        if (posRef.current >= setWidthRef.current) {
+          posRef.current -= setWidthRef.current;
         }
         inner.style.transform = `translateX(-${posRef.current}px)`;
       }
@@ -42,31 +39,27 @@ export default function AutoCarousel({ children, speed = 0.5, gap = 16 }) {
 
     animRef.current = requestAnimationFrame(animate);
 
-    const pause = () => { pausedRef.current = true; };
-    const resume = () => { pausedRef.current = false; };
+    return () => cancelAnimationFrame(animRef.current);
+  }, [speed, gap, childArray.length]);
 
-    outer.addEventListener('mouseenter', pause);
-    outer.addEventListener('mouseleave', resume);
-    outer.addEventListener('touchstart', pause, { passive: true });
-    outer.addEventListener('touchend', resume);
-
-    return () => {
-      cancelAnimationFrame(animRef.current);
-      outer.removeEventListener('mouseenter', pause);
-      outer.removeEventListener('mouseleave', resume);
-      outer.removeEventListener('touchstart', pause);
-      outer.removeEventListener('touchend', resume);
-    };
-  }, [speed, gap]);
+  const pause = () => { pausedRef.current = true; };
+  const resume = () => { pausedRef.current = false; };
 
   return (
-    <div ref={outerRef} className="overflow-hidden">
+    <div 
+      ref={outerRef} 
+      className="overflow-hidden"
+      onMouseEnter={pause}
+      onMouseLeave={resume}
+      onTouchStart={pause}
+      onTouchEnd={resume}
+    >
       <div
         ref={innerRef}
         className="flex will-change-transform"
         style={{ gap: `${gap}px` }}
       >
-        {children}
+        {tripled}
       </div>
     </div>
   );

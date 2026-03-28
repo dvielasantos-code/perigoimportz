@@ -12,11 +12,11 @@ export const data = {
 
     // Categorias principais (carrossel + rotas)
     categories: [
-        { id: "camisetas", name: "Camisetas", icon: "apparel" },
-        { id: "calcas", name: "Calças", icon: "view_agenda" },
-        { id: "bones", name: "Bonés", icon: "flag" },
-        { id: "tenis", name: "Tênis", icon: "footprint" },
-        { id: "acessorios", name: "Acessórios", icon: "watch" }
+        { id: "camisetas", name: "Camisetas", icon: "checkroom" },
+        { id: "calcas", name: "Calças", icon: "straighten" },
+        { id: "bones", name: "Bonés", icon: "school" },
+        { id: "tenis", name: "Tênis", icon: "sprint" },
+        { id: "acessorios", name: "Acessórios", icon: "diamond" }
     ],
 
     // Menu com subcategorias expansíveis
@@ -24,7 +24,7 @@ export const data = {
         {
             id: "camisetas",
             name: "Camisetas",
-            icon: "apparel",
+            icon: "checkroom",
             subcategories: [
                 { id: "camiseta", name: "Camisetas" },
                 { id: "regata", name: "Regatas" },
@@ -35,16 +35,16 @@ export const data = {
         {
             id: "calcas",
             name: "Calças",
-            icon: "view_agenda",
+            icon: "straighten",
             subcategories: [
                 { id: "calca", name: "Calças" },
                 { id: "shorts", name: "Shorts" },
                 { id: "moletom-bottom", name: "Moletom" }
             ]
         },
-        { id: "bones", name: "Bonés", icon: "flag" },
-        { id: "tenis", name: "Tênis", icon: "footprint" },
-        { id: "acessorios", name: "Acessórios", icon: "watch" },
+        { id: "bones", name: "Bonés", icon: "school" },
+        { id: "tenis", name: "Tênis", icon: "sprint" },
+        { id: "acessorios", name: "Acessórios", icon: "diamond" },
         {
             id: "marcas",
             name: "Marcas",

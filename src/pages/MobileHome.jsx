@@ -73,7 +73,7 @@ export default function MobileHome() {
 
                 <div className="grid grid-cols-2 gap-3">
                     {featured.map(p => (
-                        <div key={p.id} className="group flex flex-col gap-3">
+                        <div key={p.id} className="group flex flex-col gap-3 cursor-pointer" onClick={() => navigate(`/produto/${p.id}`)}>
                             <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-surface-container-low">
                                 <img src={p.image} alt={p.name} className="w-full h-full object-cover grayscale brightness-90 active:scale-105 transition-transform" />
                                 {p.featured && (

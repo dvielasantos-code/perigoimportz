@@ -75,7 +75,7 @@ export default function DesktopHome() {
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {featured.map(p => (
-              <div key={p.id} className="group cursor-pointer">
+              <div key={p.id} className="group cursor-pointer" onClick={() => navigate(`/produto/${p.id}`)}>
                 <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-surface-container-low mb-5 transition-transform duration-500 hover:scale-[1.02]">
                   <img src={p.image} alt={p.name} className="w-full h-full object-cover grayscale brightness-90 group-hover:brightness-100 transition-all duration-700" />
                   {p.featured && (
