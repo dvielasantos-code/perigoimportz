@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { data } from '../data';
 import SideMenu from '../components/SideMenu';
@@ -9,6 +9,10 @@ export default function ProductPage() {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [selectedSize, setSelectedSize] = useState(null);
+
+  useEffect(() => {
+    setSelectedSize(null);
+  }, [productId]);
 
   const product = data.products.find(p => String(p.id) === productId);
 
