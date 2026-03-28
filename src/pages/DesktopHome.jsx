@@ -48,9 +48,9 @@ export default function DesktopHome() {
         {/* 3. Categories - Auto Carousel com itens menores para caber 5+ */}
         <section className="px-8 mb-32">
           <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-white/50 mb-6 font-['Inter']">Categorias Principais</h3>
-          <AutoCarousel speed={0.4}>
+          <AutoCarousel speed={0.4} gap={16}>
             {data.categories.map(cat => (
-              <div key={cat.id} className="min-w-[200px] shrink-0 group relative aspect-[4/3] rounded-xl overflow-hidden bg-surface-container-low flex flex-col items-center justify-center cursor-pointer hover:bg-surface-container transition-colors duration-500">
+              <div key={cat.id} style={{ width: 'calc((100vw - 64px - 64px) / 5)' }} className="shrink-0 group relative aspect-[4/3] rounded-xl overflow-hidden bg-surface-container-low flex flex-col items-center justify-center cursor-pointer hover:bg-surface-container transition-colors duration-500">
                 <span className="material-symbols-outlined text-3xl mb-3 group-hover:scale-110 transition-transform duration-500 text-white">{cat.icon}</span>
                 <span className="font-['Manrope'] font-bold text-base tracking-tight text-white">{cat.name}</span>
               </div>

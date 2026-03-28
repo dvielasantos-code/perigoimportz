@@ -1,59 +1,71 @@
 import { useRef, useEffect } from 'react';
 
-export default function AutoCarousel({ children, speed = 0.5, className = '' }) {
-  const scrollRef = useRef(null);
-  const animationRef = useRef(null);
-  const isPaused = useRef(false);
+export default function AutoCarousel({ children, speed = 0.5, gap = 16 }) {
+  const outerRef = useRef(null);
+  const innerRef = useRef(null);
+  const animRef = useRef(null);
+  const posRef = useRef(0);
+  const pausedRef = useRef(false);
 
   useEffect(() => {
-    const container = scrollRef.current;
-    if (!container) return;
+    const outer = outerRef.current;
+    const inner = innerRef.current;
+    if (!outer || !inner) return;
 
-    // Duplicar conteúdo para loop infinito
-    const scrollContent = container.querySelector('[data-carousel-content]');
-    if (!scrollContent) return;
-    
-    // Clona os filhos para criar efeito infinito
-    const clone = scrollContent.cloneNode(true);
-    clone.setAttribute('aria-hidden', 'true');
-    container.appendChild(clone);
+    // Medir largura do conteúdo original (sem clones)
+    const items = inner.children;
+    const originalCount = items.length;
 
-    let scrollPos = 0;
-    const contentWidth = scrollContent.offsetWidth;
+    // Clonar todos os itens pra criar o loop infinito
+    for (let i = 0; i < originalCount; i++) {
+      const clone = items[i].cloneNode(true);
+      clone.setAttribute('aria-hidden', 'true');
+      inner.appendChild(clone);
+    }
+
+    // Calcular largura de 1 set completo (original)
+    let setWidth = 0;
+    for (let i = 0; i < originalCount; i++) {
+      setWidth += items[i].offsetWidth + gap;
+    }
 
     const animate = () => {
-      if (!isPaused.current) {
-        scrollPos += speed;
-        if (scrollPos >= contentWidth) {
-          scrollPos = 0;
+      if (!pausedRef.current) {
+        posRef.current += speed;
+        if (posRef.current >= setWidth) {
+          posRef.current = 0;
         }
-        container.scrollLeft = scrollPos;
+        inner.style.transform = `translateX(-${posRef.current}px)`;
       }
-      animationRef.current = requestAnimationFrame(animate);
+      animRef.current = requestAnimationFrame(animate);
     };
 
-    animationRef.current = requestAnimationFrame(animate);
+    animRef.current = requestAnimationFrame(animate);
 
-    const handleEnter = () => { isPaused.current = true; };
-    const handleLeave = () => { isPaused.current = false; };
+    const pause = () => { pausedRef.current = true; };
+    const resume = () => { pausedRef.current = false; };
 
-    container.addEventListener('mouseenter', handleEnter);
-    container.addEventListener('mouseleave', handleLeave);
-    container.addEventListener('touchstart', handleEnter, { passive: true });
-    container.addEventListener('touchend', handleLeave);
+    outer.addEventListener('mouseenter', pause);
+    outer.addEventListener('mouseleave', resume);
+    outer.addEventListener('touchstart', pause, { passive: true });
+    outer.addEventListener('touchend', resume);
 
     return () => {
-      cancelAnimationFrame(animationRef.current);
-      container.removeEventListener('mouseenter', handleEnter);
-      container.removeEventListener('mouseleave', handleLeave);
-      container.removeEventListener('touchstart', handleEnter);
-      container.removeEventListener('touchend', handleLeave);
+      cancelAnimationFrame(animRef.current);
+      outer.removeEventListener('mouseenter', pause);
+      outer.removeEventListener('mouseleave', resume);
+      outer.removeEventListener('touchstart', pause);
+      outer.removeEventListener('touchend', resume);
     };
-  }, [speed]);
+  }, [speed, gap]);
 
   return (
-    <div ref={scrollRef} className={`overflow-hidden no-scrollbar ${className}`}>
-      <div data-carousel-content className="flex gap-4 w-max">
+    <div ref={outerRef} className="overflow-hidden">
+      <div
+        ref={innerRef}
+        className="flex will-change-transform"
+        style={{ gap: `${gap}px` }}
+      >
         {children}
       </div>
     </div>
