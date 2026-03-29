@@ -9,10 +9,9 @@ export function useSiteData() {
   useEffect(() => {
     async function fetchSanity() {
       try {
-        // Puxa as categorias ativas (ou que ainda não tiveram o botão apertado), as marcas, e os banners
-        const categories = await client.fetch('*[_type == "category" && (active == true || !defined(active))]');
+        const categories = await client.fetch('*[_type == "category" && active == true]');
         const brands = await client.fetch('*[_type == "brand"]');
-        const banners = await client.fetch('*[_type == "banner" && (active == true || !defined(active))]');
+        const banners = await client.fetch('*[_type == "banner" && active == true]');
         
         // Recria a arquitetura perfeita exigida pelo menu expansível original
         const customMenu = categories.map(c => ({
