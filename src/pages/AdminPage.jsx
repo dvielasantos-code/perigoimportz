@@ -1,564 +1,693 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { auth, db } from '../firebase/config';
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
-import { collection, addDoc, getDocs, deleteDoc, doc, setDoc, query, where } from 'firebase/firestore';
+import { collection, addDoc, getDocs, deleteDoc, doc, setDoc, writeBatch } from 'firebase/firestore';
+
+// ─── Categorias pré-definidas do setor de moda ─────────────────────────────
+const FASHION_CATEGORIES = [
+  { id: 'camisetas',  name: 'Camisetas',  icon: 'apparel',       parentId: null },
+  { id: 'regatas',    name: 'Regatas',    icon: 'dry_cleaning',  parentId: 'camisetas' },
+  { id: 'longsleeve', name: 'Long Sleeve',icon: 'apparel',       parentId: 'camisetas' },
+  { id: 'oversized',  name: 'Oversized',  icon: 'apparel',       parentId: 'camisetas' },
+  { id: 'calcas',     name: 'Calças',     icon: 'laundry',       parentId: null },
+  { id: 'jogger',     name: 'Jogger',     icon: 'laundry',       parentId: 'calcas' },
+  { id: 'cargo',      name: 'Cargo',      icon: 'laundry',       parentId: 'calcas' },
+  { id: 'jeans',      name: 'Jeans',      icon: 'laundry',       parentId: 'calcas' },
+  { id: 'jaquetas',   name: 'Jaquetas',   icon: 'checkroom',     parentId: null },
+  { id: 'moletons',   name: 'Moletons',   icon: 'checkroom',     parentId: null },
+  { id: 'bone',       name: 'Bonés',      icon: 'hat',           parentId: null },
+  { id: 'tenis',      name: 'Tênis',      icon: 'steps',         parentId: null },
+  { id: 'acessorios', name: 'Acessórios', icon: 'diamond',       parentId: null },
+  { id: 'colares',    name: 'Colares',    icon: 'diamond',       parentId: 'acessorios' },
+  { id: 'pulseiras',  name: 'Pulseiras',  icon: 'diamond',       parentId: 'acessorios' },
+  { id: 'cintos',     name: 'Cintos',     icon: 'diamond',       parentId: 'acessorios' },
+];
+
+const ICON_LIST = [
+  { id: 'apparel',          name: 'Camiseta'   },
+  { id: 'dry_cleaning',     name: 'Regata'     },
+  { id: 'checkroom',        name: 'Jaqueta'    },
+  { id: 'laundry',          name: 'Calça'      },
+  { id: 'steps',            name: 'Tênis'      },
+  { id: 'hat',              name: 'Boné'       },
+  { id: 'diamond',          name: 'Acessório'  },
+  { id: 'watch',            name: 'Relógio'    },
+  { id: 'eyeglasses',       name: 'Óculos'     },
+  { id: 'shopping_bag',     name: 'Bolsa'      },
+  { id: 'styler',           name: 'Conjunto'   },
+  { id: 'sports',           name: 'Esporte'    },
+];
+
+// ─── Cores do tema Admin ────────────────────────────────────────────────────
+const G   = '#22c55e';   // verde principal
+const GD  = '#16a34a';   // verde escuro hover
+const BG  = '#0a0a0a';   // background
+const S   = '#111111';   // surface
+const S2  = '#1a1a1a';   // surface lifted
+const BOR = '#222222';   // border
 
 export default function AdminPage() {
-  const [user, setUser] = useState(null);
-  const [email, setEmail] = useState('');
+  const [user, setUser]         = useState(null);
+  const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  
-  // Controle de Abas
+  const [errors, setErrors]     = useState('');
   const [activeTab, setActiveTab] = useState('produtos');
 
-  // Dados
-  const [products, setProducts] = useState([]);
+  const [products,   setProducts]   = useState([]);
   const [categories, setCategories] = useState([]);
-  const [banners, setBanners] = useState([]);
-  const [brands, setBrands] = useState([]);
-  const [settings, setSettings] = useState({ whatsapp: '', address: '' });
+  const [banners,    setBanners]    = useState([]);
+  const [settings,   setSettings]   = useState({ whatsapp: '', address: '' });
 
   const [loading, setLoading] = useState(false);
-  const [file, setFile] = useState(null);
-  const [files, setFiles] = useState([]); // Multiple files
+  const [file,    setFile]    = useState(null);
+  const [files,   setFiles]   = useState([]);
 
-  // Estados dos Formulários
-  const [newProduct, setNewProduct] = useState({ 
-    name: '', 
-    price: '', 
-    promoPrice: '',
-    category: 'camisetas', 
-    brand: 'perigo', 
-    description: '', 
-    status: 'ativo', 
-    featured: true,
-    images: [] // Array for multiple images
+  const [newProduct, setNewProduct] = useState({
+    name: '', price: '', promoPrice: '', category: '',
+    brand: '', description: '', status: 'ativo', featured: true, images: []
   });
-  
-  const [newCategory, setNewCategory] = useState({ 
-    id: '', 
-    name: '', 
-    icon: 'apparel',
-    parentId: null,
-    active: true
+
+  const [newCategory, setNewCategory] = useState({
+    id: '', name: '', icon: 'apparel', parentId: null, active: true
   });
+
   const [newBanner, setNewBanner] = useState({ title: '', link: '' });
-  const [newBrand, setNewBrand] = useState({ name: '' });
 
-  const ICON_LIST = [
-    { id: 'apparel', name: 'Camiseta' },
-    { id: 'steps', name: 'Tênis' },
-    { id: 'diamond', name: 'Acessório' },
-    { id: 'watch', name: 'Relógio' },
-    { id: 'glasses', name: 'Óculos' },
-    { id: 'hat', name: 'Boné' },
-    { id: 'laundry', name: 'Calça' },
-    { id: 'checkroom', name: 'Jaqueta' },
-    { id: 'dry_cleaning', name: 'Regata' },
-    { id: 'styler', name: 'Conjunto' },
-    { id: 'shopping_bag', name: 'Bolsa' },
-    { id: 'workspace_premium', name: 'Premium' }
-  ];
+  // Drag state
+  const [dragging, setDragging]       = useState(null);  // id being dragged
+  const [dragOver, setDragOver]       = useState(null);  // parent id hovered
+  const [populating, setPopulating]   = useState(false);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, u => {
       setUser(u);
-      if(u) loadAllData();
+      if (u) loadAll();
     });
     return () => unsub();
   }, []);
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-    } catch(err) {
-      setError('Credenciais inválidas');
-    }
-  };
-
-  const loadAllData = async () => {
-    // Carrega tudo do Firestore pro painel
-    const pSnap = await getDocs(collection(db, "products"));
+  // ── Data loaders ─────────────────────────────────────────────────────────
+  const loadAll = async () => {
+    const [pSnap, cSnap, bSnap, sSnap] = await Promise.all([
+      getDocs(collection(db, 'products')),
+      getDocs(collection(db, 'categories')),
+      getDocs(collection(db, 'banners')),
+      getDocs(collection(db, 'settings')),
+    ]);
     setProducts(pSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-
-    const cSnap = await getDocs(collection(db, "categories"));
     setCategories(cSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-
-    const bSnap = await getDocs(collection(db, "banners"));
     setBanners(bSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+    sSnap.docs.forEach(d => { if (d.id === 'global') setSettings(d.data()); });
+  };
 
-    const brSnap = await getDocs(collection(db, "brands"));
-    setBrands(brSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+  const del = async (col, id) => {
+    if (!window.confirm('Excluir definitivamente?')) return;
+    await deleteDoc(doc(db, col, id));
+    loadAll();
+  };
 
-    const sSnap = await getDocs(collection(db, "settings"));
-    sSnap.docs.forEach(d => {
-      if(d.id === 'global') setSettings(d.data());
+  const uploadCloud = async (f) => {
+    const fd = new FormData();
+    fd.append('file', f);
+    fd.append('upload_preset', 'produtos_perigo');
+    const r = await fetch('https://api.cloudinary.com/v1_1/djua9ijum/image/upload', { method: 'POST', body: fd });
+    const d = await r.json();
+    return d.secure_url || null;
+  };
+
+  // ── Popular categorias padrão ─────────────────────────────────────────────
+  const populateCategories = async () => {
+    if (!window.confirm('Isso vai criar ' + FASHION_CATEGORIES.length + ' categorias padrão. Confirmar?')) return;
+    setPopulating(true);
+    const batch = writeBatch(db);
+    FASHION_CATEGORIES.forEach(cat => {
+      batch.set(doc(db, 'categories', cat.id), { ...cat, active: true });
     });
+    await batch.commit();
+    await loadAll();
+    setPopulating(false);
   };
 
-  const deleteDocument = async (col, id) => {
-    if(window.confirm('Excluir item definitivamente?')) {
-      await deleteDoc(doc(db, col, id));
-      loadAllData();
-    }
+  // ── Adicionar categoria manual ────────────────────────────────────────────
+  const addCategory = async (e) => {
+    e.preventDefault();
+    if (!newCategory.name.trim()) return;
+    setLoading(true);
+    const catId = newCategory.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    await setDoc(doc(db, 'categories', catId), {
+      ...newCategory, id: catId, active: true
+    });
+    setNewCategory({ id: '', name: '', icon: 'apparel', parentId: null, active: true });
+    await loadAll();
+    setLoading(false);
   };
 
-  const uploadCloudinary = async (imageFile) => {
-    const formData = new FormData();
-    formData.append('file', imageFile);
-    formData.append('upload_preset', 'produtos_perigo'); 
-    try {
-      const res = await fetch('https://api.cloudinary.com/v1_1/djua9ijum/image/upload', {
-        method: 'POST',
-        body: formData
-      });
-      const data = await res.json();
-      return data.secure_url;
-    } catch(err) {
-      alert('Erro no Cloudinary! Verifique a conexão.');
-      return null;
-    }
+  const toggleActive = async (cat) => {
+    await setDoc(doc(db, 'categories', cat.id), { ...cat, active: !cat.active });
+    loadAll();
   };
 
+  // Move subcategory to another parent via drag
+  const handleDrop = async (targetParentId) => {
+    if (!dragging || dragging === targetParentId) { setDragging(null); setDragOver(null); return; }
+    const cat = categories.find(c => c.id === dragging);
+    if (!cat) return;
+    // prevent circular (can't drag parent into its own child)
+    if (cat.id === targetParentId) return;
+    await setDoc(doc(db, 'categories', cat.id), { ...cat, parentId: targetParentId });
+    setDragging(null);
+    setDragOver(null);
+    await loadAll();
+  };
+
+  // ── Produto ───────────────────────────────────────────────────────────────
   const addProduct = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
-    let imageUrls = [];
-    
-    // Upload de múltiplas fotos
-    if (files.length > 0) {
-      for (let f of files) {
-        const url = await uploadCloudinary(f);
-        if(url) imageUrls.push(url);
-      }
-    } else if (file) {
-      // Fallback para arquivo único se ainda existir
-      const url = await uploadCloudinary(file);
-      if(url) imageUrls.push(url);
-    }
-
-    if (imageUrls.length === 0) {
-       alert("Selecione pelo menos uma foto para o produto.");
-       setLoading(false);
-       return;
-    }
-
-    await addDoc(collection(db, "products"), { 
-      ...newProduct, 
-      price: Number(newProduct.price), 
+    let urls = [];
+    for (const f of files) { const u = await uploadCloud(f); if (u) urls.push(u); }
+    if (!urls.length) { alert('Selecione pelo menos 1 foto.'); setLoading(false); return; }
+    await addDoc(collection(db, 'products'), {
+      ...newProduct,
+      price: Number(newProduct.price),
       promoPrice: newProduct.promoPrice ? Number(newProduct.promoPrice) : null,
-      image: imageUrls[0], // Foto principal
-      images: imageUrls    // Todas as fotos
+      image: urls[0], images: urls,
     });
-
-    alert('Produto cadastrado com sucesso!');
-    setNewProduct({ 
-      name: '', 
-      price: '', 
-      promoPrice: '',
-      category: 'camisetas', 
-      brand: 'perigo', 
-      description: '', 
-      status: 'ativo', 
-      featured: true,
-      images: []
-    });
-    setFile(null);
+    setNewProduct({ name:'', price:'', promoPrice:'', category:'', brand:'', description:'', status:'ativo', featured:true, images:[] });
     setFiles([]);
-    loadAllData();
+    await loadAll();
     setLoading(false);
-  };
-
-  const addCategory = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    const catId = newCategory.id.toLowerCase().replace(/\s+/g, '-');
-    await setDoc(doc(db, "categories", catId), { 
-      ...newCategory, 
-      id: catId,
-      active: true 
-    });
-    alert('Categoria salva!');
-    setNewCategory({ id: '', name: '', icon: 'apparel', parentId: null, active: true });
-    loadAllData();
-    setLoading(false);
-  };
-
-  const toggleCategoryStatus = async (cat) => {
-    await setDoc(doc(db, "categories", cat.id), { ...cat, active: !cat.active });
-    loadAllData();
   };
 
   const addBanner = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    let imageUrl = '';
-    if (file) {
-      imageUrl = await uploadCloudinary(file);
-      if(!imageUrl) { setLoading(false); return; }
-    }
-    await addDoc(collection(db, "banners"), { ...newBanner, image: imageUrl, active: true });
-    alert('Banner de Destaque salvo!');
-    setNewBanner({ title: '', link: '' });
-    setFile(null);
-    loadAllData();
-    setLoading(false);
-  };
-
-  const addBrand = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    let imageUrl = '';
-    if (file) {
-      imageUrl = await uploadCloudinary(file);
-      if(!imageUrl) { setLoading(false); return; }
-    }
-    await setDoc(doc(db, "brands", newBrand.name.toLowerCase().replace(/\s+/g, '-')), { name: newBrand.name, image: imageUrl });
-    alert('Marca salva!');
-    setNewBrand({ name: '' });
-    setFile(null);
-    loadAllData();
-    setLoading(false);
+    e.preventDefault(); setLoading(true);
+    const url = file ? await uploadCloud(file) : '';
+    await addDoc(collection(db, 'banners'), { ...newBanner, image: url, active: true });
+    setNewBanner({ title: '', link: '' }); setFile(null);
+    await loadAll(); setLoading(false);
   };
 
   const saveSettings = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    await setDoc(doc(db, "settings", "global"), settings);
-    alert('Configurações Salvas!');
-    setLoading(false);
+    e.preventDefault(); setLoading(true);
+    await setDoc(doc(db, 'settings', 'global'), settings);
+    alert('Salvo!'); setLoading(false);
   };
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-[#09090b] flex flex-col justify-center items-center text-white px-4 font-inter">
-        <div className="w-16 h-16 bg-white flex items-center justify-center mb-6">
-          <span className="text-black font-black text-2xl tracking-tighter">PI.</span>
-        </div>
-        <h1 className="text-3xl font-black mb-8 uppercase tracking-tighter">Painel de Acesso</h1>
-        <form onSubmit={handleLogin} className="w-full max-w-sm flex flex-col gap-4 bg-[#121214] p-8 rounded border border-white/5">
-          {error && <p className="text-red-500 text-center text-sm font-bold">{error}</p>}
-          <input type="email" placeholder="Email do Admin" className="p-3 bg-[#1c1c1f] text-white outline-none border border-white/5 focus:border-white/20 transition-colors" value={email} onChange={e => setEmail(e.target.value)} />
-          <input type="password" placeholder="Senha" className="p-3 bg-[#1c1c1f] text-white outline-none border border-white/5 focus:border-white/20 transition-colors" value={password} onChange={e => setPassword(e.target.value)} />
-          <button type="submit" className="bg-white text-black hover:bg-white/80 font-black uppercase tracking-widest py-4 mt-2 transition-colors text-sm">Entrar no Sistema</button>
-        </form>
-      </div>
-    );
-  }
+  // ─── Helpers ──────────────────────────────────────────────────────────────
+  const parents = categories.filter(c => !c.parentId);
+  const subs    = (pid) => categories.filter(c => c.parentId === pid);
+  const free    = categories.filter(c => c.parentId && !categories.find(p => p.id === c.parentId));
 
-
-  return (
-    <div className="min-h-screen bg-[#09090b] text-white font-inter flex flex-col md:flex-row">
-      {/* Sidebar Menu */}
-      <div className="w-full md:w-64 bg-[#121214] border-r border-white/5 flex flex-col">
-        <div className="p-6 md:p-8 flex items-center gap-4 border-b border-white/5">
-          <div className="w-10 h-10 bg-white flex items-center justify-center shrink-0">
-            <span className="text-black font-black text-xl tracking-tighter">P.</span>
+  // ─── LOGIN SCREEN ─────────────────────────────────────────────────────────
+  if (!user) return (
+    <div style={{ background: BG }} className="min-h-screen flex flex-col justify-center items-center text-white px-4">
+      <div style={{ border: `2px solid ${G}`, background: S }} className="p-10 w-full max-w-sm">
+        <div className="flex items-center gap-3 mb-8">
+          <div style={{ background: G }} className="w-10 h-10 flex items-center justify-center">
+            <span className="text-black font-black text-lg">PI</span>
           </div>
           <div>
-            <h1 className="font-black uppercase tracking-tighter text-sm">Studio</h1>
-            <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest">Admin Control</p>
+            <h1 className="font-black uppercase tracking-tighter text-lg">ADMIN STUDIO</h1>
+            <p className="text-[10px] font-bold tracking-widest uppercase" style={{ color: G }}>Perigoimportz Control</p>
+          </div>
+        </div>
+        <form onSubmit={async e => { e.preventDefault(); try { await signInWithEmailAndPassword(auth, email, password); } catch { setErrors('Credenciais inválidas'); } }} className="flex flex-col gap-4">
+          {errors && <p className="text-red-500 text-xs font-bold text-center">{errors}</p>}
+          <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)}
+            style={{ background: S2, border: `1px solid ${BOR}`, color: '#fff' }}
+            className="p-3 outline-none text-sm focus:border-green-500 transition-colors" />
+          <input type="password" placeholder="Senha" value={password} onChange={e => setPassword(e.target.value)}
+            style={{ background: S2, border: `1px solid ${BOR}`, color: '#fff' }}
+            className="p-3 outline-none text-sm focus:border-green-500 transition-colors" />
+          <button type="submit" style={{ background: G }} className="py-4 text-black font-black uppercase tracking-widest text-xs hover:opacity-90 transition-opacity">
+            Entrar
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+
+  // ─── SHARED INPUT STYLE ───────────────────────────────────────────────────
+  const inp = `p-3 text-sm text-white outline-none transition-colors focus:border-green-500`;
+  const inpStyle = { background: S2, border: `1px solid ${BOR}`, color: '#fff' };
+  const cardStyle = { background: S, border: `1px solid ${BOR}` };
+
+  // ─── MAIN PANEL ───────────────────────────────────────────────────────────
+  const tabs = [
+    { id: 'produtos',      label: 'Produtos',      icon: 'apparel' },
+    { id: 'categorias',    label: 'Categorias',    icon: 'category' },
+    { id: 'banners',       label: 'Banners',       icon: 'photo_library' },
+    { id: 'configuracoes', label: 'Configurações', icon: 'settings' },
+  ];
+
+  return (
+    <div style={{ background: BG }} className="min-h-screen text-white flex">
+
+      {/* ── Sidebar ──────────────────────────────────────────────────────── */}
+      <aside style={{ background: S, borderRight: `1px solid ${BOR}`, width: 220 }} className="flex flex-col shrink-0">
+        {/* Logo */}
+        <div style={{ borderBottom: `1px solid ${BOR}` }} className="p-6 flex items-center gap-3">
+          <div style={{ background: G }} className="w-9 h-9 flex items-center justify-center shrink-0">
+            <span className="text-black font-black text-sm">PI</span>
+          </div>
+          <div>
+            <p className="font-black text-xs uppercase tracking-tighter">Studio</p>
+            <p style={{ color: G }} className="text-[9px] font-bold uppercase tracking-widest">Admin</p>
           </div>
         </div>
 
-        <nav className="flex-1 px-4 py-8 flex flex-col gap-1">
-          {[
-            { id: 'produtos', label: 'Produtos', icon: '👕' },
-            { id: 'categorias', label: 'Categorias', icon: '📂' },
-            { id: 'banners', label: 'Banners', icon: '🖼️' },
-            { id: 'configuracoes', label: 'Configurações', icon: '⚙️' }
-          ].map(tab => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-4 px-4 py-3 text-xs font-bold uppercase tracking-widest transition-all ${activeTab === tab.id ? 'bg-white text-black' : 'text-white/60 hover:bg-white/5 hover:text-white'}`}>
-              <span className="text-lg opacity-80">{tab.icon}</span>
-              {tab.label}
+        <nav className="flex-1 p-3 flex flex-col gap-1">
+          {tabs.map(t => (
+            <button
+              key={t.id}
+              onClick={() => setActiveTab(t.id)}
+              style={activeTab === t.id
+                ? { background: G, color: '#000' }
+                : { color: 'rgba(255,255,255,0.5)' }}
+              className="flex items-center gap-3 px-4 py-3 text-[11px] font-black uppercase tracking-widest text-left hover:bg-white/5 transition-colors"
+            >
+              <span className="material-symbols-outlined text-base">{t.icon}</span>
+              {t.label}
             </button>
           ))}
         </nav>
 
-        <div className="p-6 border-t border-white/5">
-          <button onClick={() => signOut(auth)} className="w-full bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white text-xs font-bold uppercase tracking-widest py-3 transition-colors">Sair / Deslogar</button>
+        <div style={{ borderTop: `1px solid ${BOR}` }} className="p-4">
+          <button onClick={() => signOut(auth)}
+            className="w-full border border-red-500/30 text-red-500 hover:bg-red-500 hover:text-white text-[10px] font-black uppercase tracking-widest py-3 transition-all">
+            Sair
+          </button>
         </div>
-      </div>
+      </aside>
 
-      {/* Content Area */}
-      <div className="flex-1 p-4 md:p-10 overflow-y-auto">
-        <div className="max-w-5xl mx-auto">
-          <header className="mb-10">
-            <h2 className="text-2xl font-black uppercase tracking-tighter">Gerenciamento de {activeTab}</h2>
-            <p className="text-xs text-white/40 font-bold uppercase tracking-widest mt-1">Controle total sobre seu catálogo</p>
-          </header>
-          
-          <div className="mb-4 text-xs text-white/60">
-            {activeTab === 'produtos' && 'Adicione, edite ou remova produtos do seu catálogo. As alterações são sincronizadas em tempo real com o site.'}
-            {activeTab === 'categorias' && 'Organize seu site gerenciando categorias. Crie categorias principais e exiba no menu principal do site.'}
-            {activeTab === 'banners' && 'Configure os banners rotativos que aparecem no topo da página inicial do desktop e mobile.'}
-            {activeTab === 'configuracoes' && 'Ajustes globais do sistema, atendimento e integrações.'}
+      {/* ── Content ──────────────────────────────────────────────────────── */}
+      <main className="flex-1 overflow-y-auto p-8" style={{ maxHeight: '100vh' }}>
+
+        {/* Header */}
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-black uppercase tracking-tighter">{activeTab}</h2>
+            <p style={{ color: G }} className="text-[10px] font-bold uppercase tracking-widest mt-1">Perigoimportz · Control Panel</p>
           </div>
+          <div style={{ background: S, border: `1px solid ${BOR}` }} className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-white/40">
+            {new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}
+          </div>
+        </div>
 
-          {activeTab === 'produtos' && (
-          <div className="grid lg:grid-cols-3 gap-8 animate-fade-in">
-             <div className="lg:col-span-2 bg-[#121214] p-6 border border-white/5 h-fit max-h-[850px] overflow-y-auto custom-scrollbar">
+        {/* ════════════════ ABA PRODUTOS ════════════════ */}
+        {activeTab === 'produtos' && (
+          <div className="grid grid-cols-5 gap-6">
+
+            {/* Lista */}
+            <div style={cardStyle} className="col-span-3 p-6 max-h-[85vh] overflow-y-auto">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-black uppercase tracking-tighter">Produtos no Catálogo ({products.length})</h2>
-                <div className="flex gap-2">
-                   <input placeholder="Pesquisar produto..." className="p-2 bg-[#1c1c1f] text-[10px] border border-white/5 outline-none w-48 font-bold uppercase tracking-widest" />
-                </div>
+                <h3 className="font-black uppercase tracking-tighter text-base">Catálogo ({products.length})</h3>
+                <input placeholder="Buscar..." style={inpStyle} className={`${inp} text-[10px] w-40 p-2`} />
               </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {products.length === 0 && <p className="col-span-2 text-xs text-white/30 font-bold uppercase tracking-widest text-center py-8">Nenhum produto cadastrado.</p>}
+              <div className="flex flex-col gap-2">
+                {products.length === 0 && (
+                  <div className="py-20 text-center">
+                    <span className="material-symbols-outlined text-4xl text-white/10">inventory_2</span>
+                    <p className="text-white/20 text-xs font-bold uppercase tracking-widest mt-3">Nenhum produto</p>
+                  </div>
+                )}
                 {products.map(p => (
-                  <div key={p.id} className="flex items-center justify-between p-3 bg-[#1c1c1f] hover:bg-white/5 transition-colors group border border-white/5">
-                    <div className="flex items-center gap-4">
-                      <div className="w-16 h-20 bg-black overflow-hidden relative">
-                        {p.image && <img src={p.image} className="w-full h-full object-cover transition-all" />}
-                        {p.images && p.images.length > 1 && (
-                          <div className="absolute bottom-1 right-1 bg-white text-black text-[8px] px-1 font-black">+{p.images.length - 1}</div>
-                        )}
-                      </div>
-                      <div>
-                        <h3 className="font-extrabold text-xs tracking-tighter uppercase line-clamp-1">{p.name}</h3>
-                        <div className="flex items-center gap-2 mt-1">
-                          {p.promoPrice ? (
-                            <>
-                              <p className="text-[10px] text-red-500 font-black tracking-widest uppercase">R$ {p.promoPrice}</p>
-                              <p className="text-[9px] text-white/30 line-through font-bold">R$ {p.price}</p>
-                            </>
-                          ) : (
-                            <p className="text-[10px] text-white/50 font-bold tracking-widest uppercase">R$ {p.price}</p>
-                          )}
-                        </div>
-                        <p className="text-[8px] text-white/30 font-black uppercase tracking-[0.2em] mt-1">{p.category}</p>
-                      </div>
+                  <div key={p.id} style={{ border: `1px solid ${BOR}` }} className="flex items-center gap-4 p-3 hover:border-green-500/30 transition-colors group">
+                    <div className="w-14 h-18 h-[72px] overflow-hidden shrink-0" style={{ background: '#000' }}>
+                      {p.image && <img src={p.image} className="w-full h-full object-cover" />}
                     </div>
-                    <div className="flex flex-col gap-2">
-                       <button onClick={() => deleteDocument('products', p.id)} className="text-white/20 hover:text-red-500 text-lg font-bold px-2 transition-colors">&times;</button>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-black text-xs uppercase tracking-tight truncate">{p.name}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        {p.promoPrice
+                          ? <><span style={{ color: G }} className="font-black text-[11px]">R$ {p.promoPrice}</span><span className="text-white/30 line-through text-[10px]">R$ {p.price}</span></>
+                          : <span className="text-white/60 text-[11px] font-bold">R$ {p.price}</span>}
+                      </div>
+                      <p className="text-white/20 text-[9px] font-bold uppercase tracking-widest mt-1">{p.category}</p>
                     </div>
+                    <button onClick={() => del('products', p.id)} className="opacity-0 group-hover:opacity-100 text-red-500 hover:bg-red-500 hover:text-white p-2 transition-all">
+                      <span className="material-symbols-outlined text-sm">delete</span>
+                    </button>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="bg-[#121214] p-6 border border-white/5 h-fit">
-              <h2 className="text-xl font-black mb-6 uppercase tracking-tighter">Adicionar Produto</h2>
-              <form onSubmit={addProduct} className="flex flex-col gap-4 text-sm">
-                <input required placeholder="Nome do Produto (Ex: Camiseta Monolith)" value={newProduct.name} onChange={e => setNewProduct({...newProduct, name: e.target.value})} className="p-3 bg-[#1c1c1f] text-white outline-none w-full border border-white/5 focus:border-white/20" />
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[9px] font-black text-white/30 uppercase tracking-widest">Preço Normal</label>
-                    <input required type="number" step="0.01" placeholder="199.90" value={newProduct.price} onChange={e => setNewProduct({...newProduct, price: e.target.value})} className="p-3 bg-[#1c1c1f] text-white outline-none border border-white/5" />
+            {/* Form */}
+            <div style={cardStyle} className="col-span-2 p-6">
+              <h3 className="font-black uppercase tracking-tighter text-base mb-6">Adicionar Produto</h3>
+              <form onSubmit={addProduct} className="flex flex-col gap-4">
+                <input required placeholder="Nome do Produto" value={newProduct.name}
+                  onChange={e => setNewProduct({...newProduct, name: e.target.value})}
+                  style={inpStyle} className={`${inp} w-full`} />
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label style={{ color: G }} className="text-[9px] font-black uppercase tracking-widest block mb-1">Preço</label>
+                    <input required type="number" step="0.01" placeholder="199.90" value={newProduct.price}
+                      onChange={e => setNewProduct({...newProduct, price: e.target.value})}
+                      style={inpStyle} className={`${inp} w-full`} />
                   </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[9px] font-black text-red-500/50 uppercase tracking-widest">Preço Promo (Opcional)</label>
-                    <input type="number" step="0.01" placeholder="149.90" value={newProduct.promoPrice} onChange={e => setNewProduct({...newProduct, promoPrice: e.target.value})} className="p-3 bg-[#1c1c1f] text-white outline-none border border-white/5" />
+                  <div>
+                    <label className="text-red-400 text-[9px] font-black uppercase tracking-widest block mb-1">Promo (opcional)</label>
+                    <input type="number" step="0.01" placeholder="149.90" value={newProduct.promoPrice}
+                      onChange={e => setNewProduct({...newProduct, promoPrice: e.target.value})}
+                      style={inpStyle} className={`${inp} w-full`} />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[9px] font-black text-white/30 uppercase tracking-widest">Categoria</label>
-                    <select required value={newProduct.category} onChange={e => setNewProduct({...newProduct, category: e.target.value})} className="p-3 bg-[#1c1c1f] text-white outline-none border border-white/5 uppercase text-[10px] font-bold tracking-widest">
-                      {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                    </select>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[9px] font-black text-white/30 uppercase tracking-widest">Destaque</label>
-                    <div className="flex items-center h-full">
-                      <label className="flex items-center gap-2 cursor-pointer text-[10px] uppercase tracking-widest font-bold text-white/70">
-                        <input type="checkbox" checked={newProduct.featured} onChange={e => setNewProduct({...newProduct, featured: e.target.checked})} className="accent-white w-4 h-4" />
-                        Sim
-                      </label>
-                    </div>
-                  </div>
+                <div>
+                  <label style={{ color: G }} className="text-[9px] font-black uppercase tracking-widest block mb-1">Categoria</label>
+                  <select required value={newProduct.category}
+                    onChange={e => setNewProduct({...newProduct, category: e.target.value})}
+                    style={inpStyle} className={`${inp} w-full`}>
+                    <option value="">Selecionar categoria</option>
+                    {categories.map(c => <option key={c.id} value={c.id}>{c.parentId ? '↳ ' : ''}{c.name}</option>)}
+                  </select>
                 </div>
 
-                <textarea required placeholder="Descrição detalhada..." rows="4" value={newProduct.description} onChange={e => setNewProduct({...newProduct, description: e.target.value})} className="p-3 bg-[#1c1c1f] text-white outline-none w-full border border-white/5 focus:border-white/20" />
-                
-                <div className="p-6 bg-[#1f1f22] border border-dashed border-white/20 flex flex-col items-center justify-center gap-3 transition-colors hover:border-white/40 cursor-pointer relative">
-                  <span className="text-[10px] uppercase font-black text-white/50 tracking-[0.2em] text-center">Arraste ou Selecione até 7 fotos</span>
-                  <input type="file" multiple accept="image/*" onChange={e => setFiles(Array.from(e.target.files).slice(0, 7))} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                  {files.length > 0 && <span className="text-white text-[10px] font-bold bg-white/10 px-3 py-1 rounded-full">{files.length} fotos selecionadas</span>}
+                <div>
+                  <label style={{ color: G }} className="text-[9px] font-black uppercase tracking-widest block mb-1">Marca</label>
+                  <input placeholder="Ex: Perigo, Stüssy..." value={newProduct.brand}
+                    onChange={e => setNewProduct({...newProduct, brand: e.target.value})}
+                    style={inpStyle} className={`${inp} w-full`} />
                 </div>
 
-                <button type="submit" disabled={loading} className="mt-4 bg-white hover:bg-white/80 text-black font-black uppercase tracking-[0.3em] py-4 transition-colors flex justify-center items-center text-[10px]">
-                  {loading ? <span className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" /> : "ADICIONAR AO CATÁLOGO"}
+                <textarea required rows={4} placeholder="Descrição do produto..." value={newProduct.description}
+                  onChange={e => setNewProduct({...newProduct, description: e.target.value})}
+                  style={inpStyle} className={`${inp} w-full resize-none`} />
+
+                <div>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={newProduct.featured}
+                      onChange={e => setNewProduct({...newProduct, featured: e.target.checked})}
+                      className="w-4 h-4 accent-green-500" />
+                    <span style={{ color: G }} className="text-[10px] font-black uppercase tracking-widest">Produto em Destaque</span>
+                  </label>
+                </div>
+
+                {/* Upload */}
+                <div style={{ border: `2px dashed ${files.length ? G : BOR}`, background: S2 }}
+                  className="relative p-6 flex flex-col items-center gap-2 transition-all cursor-pointer hover:border-green-500">
+                  <span className="material-symbols-outlined text-2xl text-white/20">upload</span>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Até 7 fotos</p>
+                  {files.length > 0 && <p style={{ color: G }} className="text-[10px] font-bold">{files.length} foto(s) selecionada(s)</p>}
+                  <input type="file" multiple accept="image/*"
+                    onChange={e => setFiles(Array.from(e.target.files).slice(0, 7))}
+                    className="absolute inset-0 opacity-0 cursor-pointer" />
+                </div>
+
+                <button type="submit" disabled={loading}
+                  style={{ background: loading ? '#333' : G }}
+                  className="py-4 text-black font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 transition-all hover:opacity-90">
+                  {loading ? <><span className="animate-spin h-4 w-4 border-2 border-black border-t-transparent" />Enviando...</> : 'Publicar no Catálogo'}
                 </button>
               </form>
             </div>
           </div>
-          )}
+        )}
 
-          {activeTab === 'categorias' && (
-          <div className="flex flex-col gap-8 animate-fade-in">
-            {/* Form de Criação Rapida */}
-             <div className="bg-[#121214] p-6 border border-white/5">
-              <h2 className="text-xl font-black mb-6 uppercase tracking-tighter">Criar Nova Categoria</h2>
-              <form onSubmit={addCategory} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end text-sm">
-                <div className="flex flex-col gap-2">
-                  <label className="text-[10px] font-bold uppercase text-white/40 tracking-widest">Nome de Exibição</label>
-                  <input required placeholder="Ex: Camisetas Oversized" value={newCategory.name} onChange={e => setNewCategory({...newCategory, name: e.target.value, id: e.target.value})} className="p-3 bg-[#1c1c1f] text-white outline-none border border-white/5" />
+        {/* ════════════════ ABA CATEGORIAS ════════════════ */}
+        {activeTab === 'categorias' && (
+          <div className="flex flex-col gap-6">
+
+            {/* ── Linha 1: Form + botão popular ─────────────────────────────── */}
+            <div style={cardStyle} className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="font-black uppercase tracking-tighter text-base">Nova Categoria</h3>
+                <button onClick={populateCategories} disabled={populating}
+                  style={{ border: `1px solid ${G}`, color: G }}
+                  className="flex items-center gap-2 px-5 py-2 text-[10px] font-black uppercase tracking-widest hover:bg-green-500 hover:text-black transition-all">
+                  <span className="material-symbols-outlined text-sm">bolt</span>
+                  {populating ? 'Populando...' : 'Popular Categorias Padrão'}
+                </button>
+              </div>
+
+              <form onSubmit={addCategory} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <div>
+                  <label style={{ color: G }} className="text-[9px] font-black uppercase tracking-widest block mb-1">Nome</label>
+                  <input required placeholder="Ex: Regatas" value={newCategory.name}
+                    onChange={e => setNewCategory({...newCategory, name: e.target.value})}
+                    style={inpStyle} className={`${inp} w-full`} />
                 </div>
-                
-                <div className="flex flex-col gap-2">
-                  <label className="text-[10px] font-bold uppercase text-white/40 tracking-widest">Categoria Pai (Opcional)</label>
-                  <select value={newCategory.parentId || ''} onChange={e => setNewCategory({...newCategory, parentId: e.target.value || null})} className="p-3 bg-[#1c1c1f] text-white outline-none border border-white/5 text-xs font-bold uppercase">
+
+                <div>
+                  <label style={{ color: G }} className="text-[9px] font-black uppercase tracking-widest block mb-1">Categoria Pai (opcional)</label>
+                  <select value={newCategory.parentId || ''}
+                    onChange={e => setNewCategory({...newCategory, parentId: e.target.value || null})}
+                    style={inpStyle} className={`${inp} w-full`}>
                     <option value="">Nenhuma (Principal)</option>
                     {categories.filter(c => !c.parentId).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
                 </div>
 
-                <div className="flex flex-col gap-2">
-                  <label className="text-[10px] font-bold uppercase text-white/40 tracking-widest">Ícone Visual</label>
-                  <div className="grid grid-cols-6 gap-1 bg-[#1c1c1f] p-1 border border-white/5 max-h-[46px] overflow-y-auto custom-scrollbar">
-                    {ICON_LIST.map(icon => (
-                      <button 
-                        type="button" 
-                        key={icon.id} 
-                        onClick={() => setNewCategory({...newCategory, icon: icon.id})}
-                        className={`p-1 flex items-center justify-center transition-all ${newCategory.icon === icon.id ? 'bg-white text-black' : 'text-white/40 hover:bg-white/10'}`}
-                        title={icon.name}
-                      >
-                        <span className="material-symbols-outlined text-sm">{icon.id}</span>
+                <div>
+                  <label style={{ color: G }} className="text-[9px] font-black uppercase tracking-widest block mb-1">Ícone</label>
+                  <div style={{ background: S2, border: `1px solid ${BOR}` }} className="grid grid-cols-6 gap-1 p-1 h-[46px] overflow-hidden">
+                    {ICON_LIST.map(ic => (
+                      <button key={ic.id} type="button" title={ic.name}
+                        onClick={() => setNewCategory({...newCategory, icon: ic.id})}
+                        style={newCategory.icon === ic.id ? { background: G, color: '#000' } : { color: 'rgba(255,255,255,0.3)' }}
+                        className="p-1 flex items-center justify-center hover:bg-white/10 transition-colors">
+                        <span className="material-symbols-outlined text-sm">{ic.id}</span>
                       </button>
                     ))}
                   </div>
                 </div>
 
-                <button type="submit" disabled={loading} className="bg-white text-black font-black uppercase tracking-widest h-[46px] text-xs hover:bg-white/80 transition-colors">Criar Agora</button>
+                <button type="submit" disabled={loading}
+                  style={{ background: G, height: 46 }}
+                  className="text-black font-black uppercase tracking-widest text-[10px] hover:opacity-90 transition-opacity">
+                  Criar
+                </button>
               </form>
-             </div>
+            </div>
 
-             {/* Mapa Mental / Tree View das Categorias */}
-             <div className="bg-[#121214] p-8 border border-white/5 min-h-[500px]">
-              <h2 className="text-xl font-black mb-10 uppercase tracking-tighter">Estrutura do Mapa Mental</h2>
-              
-              <div className="flex flex-wrap gap-12 items-start">
-                {categories.filter(c => !c.parentId).map(parent => (
-                  <div key={parent.id} className="flex flex-col items-center group relative">
-                    {/* Categoria Pai */}
-                    <div className={`w-[220px] p-4 border rounded-xl flex flex-col items-center gap-3 transition-all relative z-10 ${parent.active ? 'bg-white border-white' : 'bg-red-500/10 border-red-500/30'}`}>
-                      <div className={`p-3 rounded-full ${parent.active ? 'bg-black text-white' : 'bg-red-500 text-white'}`}>
-                        <span className="material-symbols-outlined text-2xl">{parent.icon}</span>
-                      </div>
-                      <span className={`font-black uppercase tracking-tighter text-sm ${parent.active ? 'text-black' : 'text-red-500/60'}`}>{parent.name}</span>
-                      
-                      <div className="flex items-center gap-2 mt-2 w-full pt-3 border-t border-black/10">
-                        <button onClick={() => toggleCategoryStatus(parent)} className={`flex-1 py-1.5 rounded-lg text-white font-bold text-[9px] uppercase tracking-widest transition-colors ${parent.active ? 'bg-green-600' : 'bg-gray-600'}`}>
-                          {parent.active ? 'ATIVO' : 'OCULTO'}
-                        </button>
-                        <button onClick={() => deleteDocument('categories', parent.id)} className="p-1.5 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-lg transition-colors">
-                          <span className="material-symbols-outlined text-xs">delete</span>
-                        </button>
-                      </div>
-                    </div>
+            {/* ── Linha 2: Mapa Mental com Drag & Drop ──────────────────────── */}
+            <div style={cardStyle} className="p-8">
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <h3 className="font-black uppercase tracking-tighter text-base">Mapa de Categorias</h3>
+                  <p className="text-white/30 text-[10px] font-bold uppercase tracking-widest mt-1">
+                    Arraste uma subcategoria para dentro de outra categoria pai
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest">
+                  <span className="w-3 h-3 inline-block" style={{ background: G }} />
+                  <span style={{ color: G }}>Ativo</span>
+                  <span className="w-3 h-3 inline-block bg-white/20 ml-4" />
+                  <span className="text-white/30">Oculto</span>
+                </div>
+              </div>
 
-                    {/* Linha Conectora para Subcategorias */}
-                    {categories.some(sub => sub.parentId === parent.id) && (
-                      <div className="w-[2px] h-8 bg-white/10" />
-                    )}
+              {categories.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-32" style={{ border: `2px dashed ${BOR}` }}>
+                  <span className="material-symbols-outlined text-5xl text-white/10">category</span>
+                  <p className="text-white/20 text-xs font-bold uppercase tracking-widest mt-4">Nenhuma categoria criada</p>
+                  <p className="text-white/10 text-[10px] mt-2">Use o botão "Popular Categorias Padrão" acima</p>
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-8 items-start">
+                  {parents.map(parent => {
+                    const children = subs(parent.id);
+                    const isOver = dragOver === parent.id;
+                    return (
+                      <div key={parent.id}
+                        onDragOver={e => { e.preventDefault(); setDragOver(parent.id); }}
+                        onDragLeave={() => setDragOver(null)}
+                        onDrop={() => handleDrop(parent.id)}
+                        style={{
+                          border: `2px solid ${isOver ? G : parent.active ? 'rgba(34,197,94,0.3)' : BOR}`,
+                          background: isOver ? 'rgba(34,197,94,0.05)' : S2,
+                          transition: 'all 0.15s',
+                          minWidth: 200
+                        }}
+                        className="p-4 flex flex-col gap-3">
 
-                    {/* Subcategorias */}
-                    <div className="flex flex-col gap-2 w-full">
-                      {categories.filter(sub => sub.parentId === parent.id).map(sub => (
-                        <div key={sub.id} className={`p-3 rounded-lg border flex items-center justify-between gap-4 group/sub transition-all ${sub.active ? 'bg-[#1c1c1f] border-white/5' : 'bg-red-500/5 border-red-500/20'}`}>
-                          <div className="flex items-center gap-3">
-                            <span className={`material-symbols-outlined text-sm ${sub.active ? 'text-white/40' : 'text-red-500/40'}`}>{sub.icon || 'subdirectory_arrow_right'}</span>
-                            <span className={`text-[11px] font-bold uppercase tracking-widest ${sub.active ? 'text-white/80' : 'text-red-500/40'}`}>{sub.name}</span>
+                        {/* Cabeçalho pai */}
+                        <div className="flex items-center gap-3">
+                          <div style={{ background: parent.active ? G : '#333', padding: 8 }}>
+                            <span className="material-symbols-outlined text-xl text-black"
+                              style={{ color: parent.active ? '#000' : '#fff' }}>{parent.icon}</span>
                           </div>
-                          <div className="flex items-center gap-2 opacity-0 group-hover/sub:opacity-100 transition-opacity">
-                            <button onClick={() => toggleCategoryStatus(sub)} className={`material-symbols-outlined text-sm ${sub.active ? 'text-green-500' : 'text-gray-500'}`}>
-                              {sub.active ? 'visibility' : 'visibility_off'}
-                            </button>
-                            <button onClick={() => deleteDocument('categories', sub.id)} className="material-symbols-outlined text-sm text-red-500">close</button>
+                          <div className="flex-1">
+                            <p className="font-black uppercase tracking-tighter text-sm"
+                              style={{ opacity: parent.active ? 1 : 0.3 }}>{parent.name}</p>
+                            <p className="text-[9px] font-bold uppercase tracking-widest"
+                              style={{ color: parent.active ? G : 'rgba(255,255,255,0.2)' }}>
+                              {children.length} sub{children.length !== 1 ? 's' : ''}
+                            </p>
                           </div>
+                        </div>
+
+                        {/* Botões ação pai */}
+                        <div className="flex gap-2">
+                          <button onClick={() => toggleActive(parent)}
+                            style={{
+                              flex: 1, padding: '6px 0', fontSize: 9, fontWeight: 900,
+                              background: parent.active ? G : '#333',
+                              color: parent.active ? '#000' : '#888',
+                              letterSpacing: '0.15em'
+                            }}
+                            className="uppercase transition-all hover:opacity-80">
+                            {parent.active ? '● ATIVO' : '○ OCULTO'}
+                          </button>
+                          <button onClick={() => del('categories', parent.id)}
+                            className="px-3 border border-red-500/30 text-red-500 hover:bg-red-500 hover:text-white transition-all">
+                            <span className="material-symbols-outlined text-sm">delete</span>
+                          </button>
+                        </div>
+
+                        {/* Drop zone label */}
+                        {isOver && (
+                          <div style={{ border: `1px dashed ${G}`, color: G }}
+                            className="text-center text-[9px] font-black uppercase tracking-widest py-2">
+                            Soltar aqui como subcategoria
+                          </div>
+                        )}
+
+                        {/* Subcategorias */}
+                        {children.length > 0 && (
+                          <div className="flex flex-col gap-1.5 mt-1" style={{ borderTop: `1px solid ${BOR}`, paddingTop: 12 }}>
+                            {children.map(sub => (
+                              <div key={sub.id}
+                                draggable
+                                onDragStart={() => setDragging(sub.id)}
+                                onDragEnd={() => { setDragging(null); setDragOver(null); }}
+                                style={{
+                                  background: dragging === sub.id ? 'rgba(34,197,94,0.1)' : S,
+                                  border: `1px solid ${dragging === sub.id ? G : BOR}`,
+                                  cursor: 'grab',
+                                  opacity: sub.active ? 1 : 0.4,
+                                }}
+                                className="flex items-center justify-between px-3 py-2 gap-2 group/sub">
+                                <div className="flex items-center gap-2">
+                                  <span className="material-symbols-outlined text-xs text-white/20">drag_indicator</span>
+                                  <span className="material-symbols-outlined text-xs" style={{ color: sub.active ? G : '#555' }}>{sub.icon}</span>
+                                  <span className="text-[10px] font-bold uppercase tracking-wider">{sub.name}</span>
+                                </div>
+                                <div className="flex items-center gap-1 opacity-0 group-hover/sub:opacity-100 transition-opacity">
+                                  <button onClick={() => toggleActive(sub)}
+                                    className="material-symbols-outlined text-xs transition-colors"
+                                    style={{ color: sub.active ? G : '#555' }}>
+                                    {sub.active ? 'visibility' : 'visibility_off'}
+                                  </button>
+                                  <button onClick={() => del('categories', sub.id)}
+                                    className="material-symbols-outlined text-xs text-red-500/50 hover:text-red-500 transition-colors">
+                                    close
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Bot label */}
+                        <p className="text-[9px] text-white/15 font-bold uppercase tracking-widest text-center">
+                          {isOver ? '' : 'Arraste subcats aqui'}
+                        </p>
+                      </div>
+                    );
+                  })}
+
+                  {/* Categorias soltas (sem pai válido) */}
+                  {free.length > 0 && (
+                    <div style={{ border: `2px dashed ${BOR}`, minWidth: 200 }} className="p-4">
+                      <p style={{ color: 'rgba(255,255,255,0.3)' }} className="text-[9px] font-black uppercase tracking-widest mb-3">Categorias Orphans</p>
+                      {free.map(c => (
+                        <div key={c.id}
+                          draggable
+                          onDragStart={() => setDragging(c.id)}
+                          onDragEnd={() => { setDragging(null); setDragOver(null); }}
+                          style={{ border: `1px solid ${BOR}`, cursor: 'grab' }}
+                          className="flex items-center gap-2 p-2 mb-2">
+                          <span className="material-symbols-outlined text-sm text-white/30">{c.icon}</span>
+                          <span className="text-[10px] font-bold uppercase">{c.name}</span>
                         </div>
                       ))}
                     </div>
-
-                    {/* Botão para add sub rápido */}
-                    <button 
-                      onClick={() => setNewCategory({...newCategory, parentId: parent.id})}
-                      className="mt-4 w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white hover:text-black transition-all"
-                      title="Adicionar Subcategoria"
-                    >
-                      <span className="material-symbols-outlined text-sm">add</span>
-                    </button>
-                  </div>
-                ))}
-
-                {/* Bloco Vazio de Adição */}
-                {categories.length === 0 && (
-                   <div className="w-full flex justify-center items-center h-[300px] border border-dashed border-white/10 rounded-2xl">
-                     <p className="text-white/20 font-bold uppercase tracking-[0.3em] text-xs">Crie sua primeira categoria principal acima.</p>
-                   </div>
-                )}
-              </div>
-             </div>
-          </div>
-          )}
-
-          {activeTab === 'banners' && (
-          <div className="grid md:grid-cols-2 gap-8 animate-fade-in">
-             <div className="bg-[#121214] p-6 border border-white/5">
-              <h2 className="text-xl font-black mb-6 uppercase tracking-tighter">Novo Banner Inicial</h2>
-              <form onSubmit={addBanner} className="flex flex-col gap-4 text-sm">
-                <input required placeholder="Título do Banner" value={newBanner.title} onChange={e => setNewBanner({...newBanner, title: e.target.value})} className="p-3 bg-[#1c1c1f] text-white outline-none w-full border border-white/5" />
-                <input placeholder="Link (Ex: /categoria/camisetas)" value={newBanner.link} onChange={e => setNewBanner({...newBanner, link: e.target.value})} className="p-3 bg-[#1c1c1f] text-white outline-none w-full border border-white/5" />
-                
-                <div className="p-6 bg-[#1f1f22] border border-dashed border-white/20 flex flex-col items-center justify-center gap-3 relative cursor-pointer">
-                  <span className="text-xs uppercase font-black text-white/50 tracking-widest">Foto do Banner (Desktop 16:9)</span>
-                  <input type="file" required accept="image/*" onChange={e => setFile(e.target.files[0])} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                  {file && <span className="text-white text-xs">{file.name}</span>}
+                  )}
                 </div>
+              )}
+            </div>
+          </div>
+        )}
 
-                <button type="submit" disabled={loading} className="mt-4 bg-white text-black font-black uppercase tracking-widest py-4 text-xs hover:bg-white/80">
+        {/* ════════════════ ABA BANNERS ════════════════ */}
+        {activeTab === 'banners' && (
+          <div className="grid grid-cols-2 gap-6">
+            <div style={cardStyle} className="p-6">
+              <h3 className="font-black uppercase tracking-tighter text-base mb-6">Novo Banner</h3>
+              <form onSubmit={addBanner} className="flex flex-col gap-4">
+                <input required placeholder="Título" value={newBanner.title}
+                  onChange={e => setNewBanner({...newBanner, title: e.target.value})}
+                  style={inpStyle} className={`${inp} w-full`} />
+                <input placeholder="Link (/categoria/...)" value={newBanner.link}
+                  onChange={e => setNewBanner({...newBanner, link: e.target.value})}
+                  style={inpStyle} className={`${inp} w-full`} />
+                <div style={{ border: `2px dashed ${file ? G : BOR}`, background: S2 }}
+                  className="relative p-8 flex flex-col items-center gap-2 cursor-pointer">
+                  <span className="material-symbols-outlined text-2xl text-white/20">photo</span>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Imagem do Banner (16:9)</p>
+                  {file && <p style={{ color: G }} className="text-[10px] font-bold">{file.name}</p>}
+                  <input type="file" accept="image/*" onChange={e => setFile(e.target.files[0])}
+                    className="absolute inset-0 opacity-0 cursor-pointer" />
+                </div>
+                <button type="submit" disabled={loading} style={{ background: G }}
+                  className="py-4 text-black font-black uppercase tracking-widest text-[10px] hover:opacity-90 transition-opacity">
                   {loading ? 'Enviando...' : 'Adicionar Banner'}
                 </button>
               </form>
-             </div>
-             <div className="bg-[#121214] p-6 border border-white/5 h-fit max-h-[700px] overflow-y-auto custom-scrollbar">
-              <h2 className="text-xl font-black mb-6 uppercase tracking-tighter">Banners Ativos ({banners.length})</h2>
-              <div className="flex flex-col gap-2">
+            </div>
+
+            <div style={cardStyle} className="p-6 max-h-[85vh] overflow-y-auto">
+              <h3 className="font-black uppercase tracking-tighter text-base mb-6">Banners Ativos ({banners.length})</h3>
+              <div className="flex flex-col gap-3">
                 {banners.map(b => (
-                  <div key={b.id} className="flex flex-col gap-2 p-3 bg-[#1c1c1f]">
-                    <div className="h-24 w-full bg-black relative overflow-hidden">
-                      {b.image && <img src={b.image} className="w-full h-full object-cover " />}
+                  <div key={b.id} style={{ border: `1px solid ${BOR}` }} className="group">
+                    <div className="h-28 overflow-hidden">
+                      {b.image && <img src={b.image} className="w-full h-full object-cover" />}
                     </div>
-                    <div className="flex justify-between items-center text-xs font-bold uppercase tracking-widest mt-2">
-                      <span>{b.title}</span>
-                      <button onClick={() => deleteDocument('banners', b.id)} className="text-red-500 hover:text-white px-2">&times;</button>
+                    <div style={{ borderTop: `1px solid ${BOR}` }} className="flex items-center justify-between p-3">
+                      <p className="text-xs font-bold uppercase tracking-widest">{b.title}</p>
+                      <button onClick={() => del('banners', b.id)} className="text-red-500 hover:bg-red-500 hover:text-white p-1 transition-all">
+                        <span className="material-symbols-outlined text-sm">delete</span>
+                      </button>
                     </div>
                   </div>
                 ))}
               </div>
-             </div>
+            </div>
           </div>
-          )}
+        )}
 
-          {activeTab === 'configuracoes' && (
-          <div className="max-w-xl animate-fade-in bg-[#121214] p-6 border border-white/5">
-            <h2 className="text-xl font-black mb-6 uppercase tracking-tighter">Configurações Gerais</h2>
-            <form onSubmit={saveSettings} className="flex flex-col gap-4 text-sm">
+        {/* ════════════════ ABA CONFIGURAÇÕES ════════════════ */}
+        {activeTab === 'configuracoes' && (
+          <div style={cardStyle} className="p-8 max-w-lg">
+            <h3 className="font-black uppercase tracking-tighter text-base mb-8">Configurações Globais</h3>
+            <form onSubmit={saveSettings} className="flex flex-col gap-5">
               <div>
-                <label className="text-xs font-bold uppercase tracking-widest text-white/50 mb-2 block">Número do WhatsApp</label>
-                <input placeholder="Ex: 5511999999999" value={settings.whatsapp} onChange={e => setSettings({...settings, whatsapp: e.target.value})} className="p-3 bg-[#1c1c1f] text-white outline-none w-full border border-white/5" />
-                <p className="text-[10px] text-white/30 mt-1 uppercase tracking-widest">Usado no botão flutuante e rodapé.</p>
+                <label style={{ color: G }} className="text-[9px] font-black uppercase tracking-widest block mb-2">WhatsApp (com DDI)</label>
+                <input placeholder="5511999999999" value={settings.whatsapp}
+                  onChange={e => setSettings({...settings, whatsapp: e.target.value})}
+                  style={inpStyle} className={`${inp} w-full`} />
+                <p className="text-white/20 text-[9px] mt-1 font-bold uppercase tracking-widest">Usado no botão flutuante e footer</p>
               </div>
               <div>
-                <label className="text-xs font-bold uppercase tracking-widest text-white/50 mb-2 block">Endereço Físico</label>
-                <input placeholder="Rua exemplo, 123..." value={settings.address} onChange={e => setSettings({...settings, address: e.target.value})} className="p-3 bg-[#1c1c1f] text-white outline-none w-full border border-white/5" />
+                <label style={{ color: G }} className="text-[9px] font-black uppercase tracking-widest block mb-2">Endereço</label>
+                <input placeholder="Rua Exemplo, 123 – SP" value={settings.address}
+                  onChange={e => setSettings({...settings, address: e.target.value})}
+                  style={inpStyle} className={`${inp} w-full`} />
               </div>
-              <button type="submit" disabled={loading} className="mt-6 bg-white text-black font-black uppercase tracking-widest py-4 text-xs hover:bg-white/80">Salvar Modificações</button>
+              <button type="submit" disabled={loading} style={{ background: G }}
+                className="py-4 mt-4 text-black font-black uppercase tracking-widest text-[10px] hover:opacity-90 transition-opacity">
+                Salvar Configurações
+              </button>
             </form>
           </div>
-          )}
+        )}
 
-        </div>
-      </div>
+      </main>
     </div>
   );
 }
