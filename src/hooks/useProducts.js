@@ -1,29 +1,31 @@
 import { useState, useEffect } from 'react';
-import { client } from '../sanity/client';
+import { db } from '../firebase/config';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { data as staticData } from '../data';
 
 export function useProducts(category = null) {
-  const [products, setProducts] = useState(staticData.products); // Inicia com o catálogo antigo como fallback
+  const [products, setProducts] = useState(staticData.products); // Inicia rapido
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let query = `*[_type == "product" && status == "ativo"]`;
+    let q = query(collection(db, "products"), where("status", "==", "ativo"));
     
     if (category) {
-      query += `[category == "${category}"]`;
+      q = query(collection(db, "products"), where("status", "==", "ativo"), where("category", "==", category));
     }
 
-    client.fetch(query)
-      .then((data) => {
-        if (data.length > 0) {
-          setProducts(data);
-        }
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Erro ao puxar dados do Sanity. Usando fallback estático.", err);
-        setLoading(false);
-      });
+    const unsub = onSnapshot(q, (snap) => {
+      const prods = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      if (prods.length > 0) {
+        setProducts(prods);
+      }
+      setLoading(false);
+    }, (err) => {
+      console.error("Erro ao escutar Firestore:", err);
+      setLoading(false);
+    });
+
+    return () => unsub();
   }, [category]);
 
   return { products, loading };

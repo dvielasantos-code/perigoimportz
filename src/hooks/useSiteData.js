@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { client } from '../sanity/client';
+import { db } from '../firebase/config';
+import { collection, onSnapshot, query, where, doc, getDoc } from 'firebase/firestore';
 import { data as staticData } from '../data';
 
 export function useSiteData() {
@@ -7,49 +8,51 @@ export function useSiteData() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchSanity() {
-      try {
-        const categories = await client.fetch('*[_type == "category" && active == true]');
-        const brands = await client.fetch('*[_type == "brand"]');
-        const banners = await client.fetch('*[_type == "banner" && active == true]');
-        
-        // Recria a arquitetura perfeita exigida pelo menu expansível original
-        const customMenu = categories.map(c => ({
-          id: c.slug,
-          name: c.name,
-          icon: c.icon || 'checkroom', // ícone padrão
-          subcategories: (c.subcategories || []).map(s => ({ 
-            id: s.toLowerCase().replace(/\s+/g, '-'), 
-            name: s 
-          }))
-        }));
+    // Escuta Categorias
+    const qCats = query(collection(db, "categories"), where("active", "==", true));
+    const unsubCats = onSnapshot(qCats, (snap) => {
+      const cats = snap.docs.map(d => d.data());
+      // Ordena pelas posições originais ou como vier
+      
+      setSiteData(prev => ({
+        ...prev,
+        menuCategories: cats
+      }));
+    });
 
-        // Injeta a seção Marcas caso tenhamos marcas criadas
-        if (brands.length > 0) {
-           customMenu.push({
-             id: 'marcas', 
-             name: 'Marcas', 
-             icon: 'verified',
-             subcategories: brands.map(b => ({ id: b.slug, name: b.name }))
-           });
-        }
-        
-        // Substitui a base inteira, mantendo enderço e whatsapp originais
-        setSiteData({
-          whatsapp: staticData.whatsapp,
-          address: staticData.address,
-          categories: customMenu.filter(c => c.id !== 'marcas'), // Carrossel Home não pega Marca
-          menuCategories: customMenu, // Menu lateral pega Marca
-          banners: banners
-        });
-      } catch(err) {
-        console.error('Falha de ligação no Sanity. Fallback ativado.', err);
-      } finally {
-        setLoading(false);
+    // Escuta Banners
+    const qBanners = query(collection(db, "banners"), where("active", "==", true));
+    const unsubBanners = onSnapshot(qBanners, (snap) => {
+      const banners = snap.docs.map(d => d.data());
+      setSiteData(prev => ({
+        ...prev,
+        banners
+      }));
+    });
+
+    // Escuta Marcas
+    const unsubBrands = onSnapshot(collection(db, "brands"), (snap) => {
+      const brands = snap.docs.map(d => d.data());
+      setSiteData(prev => ({
+        ...prev,
+        brands
+      }));
+    });
+
+    // Escuta Configs de Whatsapp e Endeço:
+    getDoc(doc(db, "settings", "global")).then((snap) => {
+      if(snap.exists()) {
+        const d = snap.data();
+        setSiteData(prev => ({ ...prev, whatsapp: d.whatsapp || prev.whatsapp, address: d.address || prev.address }));
       }
-    }
-    
-    fetchSanity();
+      setLoading(false);
+    });
+
+    return () => {
+      unsubCats();
+      unsubBanners();
+      unsubBrands();
+    };
   }, []);
 
   return { data: siteData, loading };

@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSiteData } from '../hooks/useSiteData';
 import { useProducts } from '../hooks/useProducts';
-import { urlFor } from '../sanity/client';
 import SideMenu from '../components/SideMenu';
 import WhatsAppButton from '../components/WhatsAppButton';
 
@@ -78,7 +77,7 @@ export default function ProductPage() {
           {/* Imagem */}
           <div className="md:w-1/2 lg:w-[55%]">
             <div className="relative aspect-[3/4] md:aspect-[4/5] rounded-2xl md:rounded-3xl overflow-hidden bg-surface-container-low">
-              <img src={product.image?.asset ? urlFor(product.image).url() : product.image} alt={product.name} className="w-full h-full object-cover grayscale brightness-90 hover:brightness-100 transition-all duration-700" />
+              <img src={product.image} alt={product.name} className="w-full h-full object-cover grayscale brightness-90 hover:brightness-100 transition-all duration-700" />
               {product.featured && (
                 <div className="absolute top-4 left-4 md:top-6 md:left-6">
                   <span className="bg-primary text-on-primary px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest">Destaque</span>
@@ -180,7 +179,7 @@ export default function ProductPage() {
               {related.map(p => (
                 <div key={p.id || p._id} className="group cursor-pointer" onClick={() => navigate(`/produto/${p.id || p._id}`)}>
                   <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-surface-container-low mb-3 transition-transform duration-500 hover:scale-[1.02]">
-                    <img src={p.image?.asset ? urlFor(p.image).url() : p.image} alt={p.name} className="w-full h-full object-cover grayscale brightness-90 group-hover:brightness-100 transition-all duration-700" />
+                    <img src={p.image} alt={p.name} className="w-full h-full object-cover grayscale brightness-90 group-hover:brightness-100 transition-all duration-700" />
                   </div>
                   <h4 className="font-extrabold text-xs md:text-sm tracking-tighter uppercase text-white">{p.name}</h4>
                   <span className="font-bold text-xs md:text-sm text-white/70 mt-1 block">R$ {p.price.toFixed(0)}</span>

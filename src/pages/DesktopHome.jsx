@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProducts } from '../hooks/useProducts';
 import { useSiteData } from '../hooks/useSiteData';
-import { urlFor } from '../sanity/client';
 import SideMenu from '../components/SideMenu';
 import WhatsAppButton from '../components/WhatsAppButton';
 import AutoCarousel from '../components/AutoCarousel';
@@ -79,7 +78,7 @@ export default function DesktopHome() {
             {featured.map(p => (
               <div key={p.id || p._id} className="group cursor-pointer" onClick={() => navigate(`/produto/${p.id || p._id}`)}>
                 <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-surface-container-low mb-5 transition-transform duration-500 hover:scale-[1.02]">
-                  <img src={p.image?.asset ? urlFor(p.image).url() : p.image} alt={p.name} className="w-full h-full object-cover grayscale brightness-90 group-hover:brightness-100 transition-all duration-700" />
+                  <img src={p.image} alt={p.name} className="w-full h-full object-cover grayscale brightness-90 group-hover:brightness-100 transition-all duration-700" />
                   {p.featured && (
                     <div className="absolute top-5 left-5">
                       <span className="bg-primary text-on-primary px-4 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-widest">Destaque</span>
