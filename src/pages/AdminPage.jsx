@@ -14,48 +14,54 @@ import {
 
 // ─── Presets ──────────────────────────────────────────────────────────────────
 const PRESET = [
-  { id: 'camisetas',     name: 'Camisetas',     icon: 'apparel',      parentId: null },
-  { id: 'regatas',       name: 'Regatas',       icon: 'dry_cleaning', parentId: 'camisetas' },
-  { id: 'longsleeve',    name: 'Long Sleeve',   icon: 'apparel',      parentId: 'camisetas' },
-  { id: 'oversized',     name: 'Oversized',     icon: 'apparel',      parentId: 'camisetas' },
-  { id: 'polo',          name: 'Polo',          icon: 'apparel',      parentId: 'camisetas' },
-  { id: 'calcas',        name: 'Calças',        icon: 'laundry',      parentId: null },
-  { id: 'jogger',        name: 'Jogger',        icon: 'laundry',      parentId: 'calcas' },
-  { id: 'cargo',         name: 'Cargo',         icon: 'laundry',      parentId: 'calcas' },
-  { id: 'jeans',         name: 'Jeans',         icon: 'laundry',      parentId: 'calcas' },
-  { id: 'shorts',        name: 'Shorts',        icon: 'laundry',      parentId: 'calcas' },
-  { id: 'moletom-calca', name: 'Moletom Calça', icon: 'laundry',      parentId: 'calcas' },
-  { id: 'jaquetas',      name: 'Jaquetas',      icon: 'checkroom',    parentId: null },
-  { id: 'corta-vento',   name: 'Corta Vento',   icon: 'checkroom',    parentId: 'jaquetas' },
-  { id: 'bomber',        name: 'Bomber',        icon: 'checkroom',    parentId: 'jaquetas' },
-  { id: 'moletons',      name: 'Moletons',      icon: 'checkroom',    parentId: null },
-  { id: 'moletom-zip',   name: 'Zip Up',        icon: 'checkroom',    parentId: 'moletons' },
-  { id: 'crewneck',      name: 'Crewneck',      icon: 'checkroom',    parentId: 'moletons' },
-  { id: 'bone',          name: 'Bonés',         icon: 'hat',          parentId: null },
-  { id: 'snapback',      name: 'Snapback',      icon: 'hat',          parentId: 'bone' },
-  { id: 'dad-hat',       name: 'Dad Hat',       icon: 'hat',          parentId: 'bone' },
-  { id: 'tenis',         name: 'Tênis',         icon: 'steps',        parentId: null },
-  { id: 'acessorios',    name: 'Acessórios',    icon: 'diamond',      parentId: null },
-  { id: 'colares',       name: 'Colares',       icon: 'diamond',      parentId: 'acessorios' },
-  { id: 'pulseiras',     name: 'Pulseiras',     icon: 'diamond',      parentId: 'acessorios' },
-  { id: 'cintos',        name: 'Cintos',        icon: 'diamond',      parentId: 'acessorios' },
-  { id: 'oculos',        name: 'Óculos',        icon: 'eyeglasses',   parentId: 'acessorios' },
-  { id: 'meias',         name: 'Meias',         icon: 'apparel',      parentId: 'acessorios' },
-  { id: 'conjuntos',     name: 'Conjuntos',     icon: 'styler',       parentId: null },
+  { id: 'camisetas',     name: 'Camisetas',     icon: '👕', parentId: null },
+  { id: 'regatas',       name: 'Regatas',       icon: '🎽', parentId: 'camisetas' },
+  { id: 'longsleeve',    name: 'Long Sleeve',   icon: '👕', parentId: 'camisetas' },
+  { id: 'oversized',     name: 'Oversized',     icon: '👕', parentId: 'camisetas' },
+  { id: 'polo',          name: 'Polo',          icon: '👕', parentId: 'camisetas' },
+  { id: 'calcas',        name: 'Calças',        icon: '👖', parentId: null },
+  { id: 'jogger',        name: 'Jogger',        icon: '👖', parentId: 'calcas' },
+  { id: 'cargo',         name: 'Cargo',         icon: '👖', parentId: 'calcas' },
+  { id: 'jeans',         name: 'Jeans',         icon: '👖', parentId: 'calcas' },
+  { id: 'shorts',        name: 'Shorts',        icon: '🩳', parentId: 'calcas' },
+  { id: 'moletom-calca', name: 'Moletom Calça', icon: '👖', parentId: 'calcas' },
+  { id: 'jaquetas',      name: 'Jaquetas',      icon: '🧥', parentId: null },
+  { id: 'corta-vento',   name: 'Corta Vento',   icon: '🧥', parentId: 'jaquetas' },
+  { id: 'bomber',        name: 'Bomber',        icon: '🧥', parentId: 'jaquetas' },
+  { id: 'moletons',      name: 'Moletons',      icon: '🧥', parentId: null },
+  { id: 'moletom-zip',   name: 'Zip Up',        icon: '🧥', parentId: 'moletons' },
+  { id: 'crewneck',      name: 'Crewneck',      icon: '🧥', parentId: 'moletons' },
+  { id: 'bone',          name: 'Bonés',         icon: '🧢', parentId: null },
+  { id: 'snapback',      name: 'Snapback',      icon: '🧢', parentId: 'bone' },
+  { id: 'dad-hat',       name: 'Dad Hat',       icon: '🧢', parentId: 'bone' },
+  { id: 'tenis',         name: 'Tênis',         icon: '👟', parentId: null },
+  { id: 'acessorios',    name: 'Acessórios',    icon: '💎', parentId: null },
+  { id: 'colares',       name: 'Colares',       icon: '📿', parentId: 'acessorios' },
+  { id: 'pulseiras',     name: 'Pulseiras',     icon: '📿', parentId: 'acessorios' },
+  { id: 'cintos',        name: 'Cintos',        icon: '🪡', parentId: 'acessorios' },
+  { id: 'oculos',        name: 'Óculos',        icon: '🕶️', parentId: 'acessorios' },
+  { id: 'meias',         name: 'Meias',         icon: '🧦', parentId: 'acessorios' },
+  { id: 'conjuntos',     name: 'Conjuntos',     icon: '👔', parentId: null },
 ];
 
+// Ícones disponíveis no seletor — emoji reais
 const ICONS = [
-  { id: 'apparel',      label: 'Camiseta'  },
-  { id: 'dry_cleaning', label: 'Regata'    },
-  { id: 'checkroom',    label: 'Jaqueta'   },
-  { id: 'laundry',      label: 'Calça'     },
-  { id: 'steps',        label: 'Tênis'     },
-  { id: 'hat',          label: 'Boné'      },
-  { id: 'diamond',      label: 'Acess.'    },
-  { id: 'watch',        label: 'Relógio'   },
-  { id: 'eyeglasses',   label: 'Óculos'    },
-  { id: 'shopping_bag', label: 'Bolsa'     },
-  { id: 'styler',       label: 'Conjunto'  },
+  { id: '👕', label: 'Camiseta'  },
+  { id: '🎽', label: 'Regata'    },
+  { id: '🧥', label: 'Moletom'   },
+  { id: '👖', label: 'Calça'     },
+  { id: '🩳', label: 'Bermuda'   },
+  { id: '👟', label: 'Tênis'     },
+  { id: '🧢', label: 'Boné'      },
+  { id: '📿', label: 'Colar'     },
+  { id: '💎', label: 'Acess.'    },
+  { id: '🕶️', label: 'Óculos'    },
+  { id: '🧦', label: 'Meias'     },
+  { id: '👔', label: 'Camisa'    },
+  { id: '👗', label: 'Vestido'   },
+  { id: '👜', label: 'Bolsa'     },
+  { id: '⌚', label: 'Relógio'   },
+  { id: '🪡', label: 'Cinto'     },
 ];
 
 const G = '#22c55e';
@@ -78,21 +84,21 @@ function DraggableChip({ cat, onToggle, onRemove }) {
       }}
     >
       <div className="flex items-center gap-2 pointer-events-none">
-        <span className="material-symbols-outlined text-xs text-[#444]">drag_indicator</span>
-        <span className="material-symbols-outlined text-xs" style={{ color: cat.active ? G : '#444' }}>{cat.icon}</span>
+        <span className="text-xs text-[#555]">⠿</span>
+        <span className="text-base leading-none" style={{ opacity: cat.active ? 1 : 0.4 }}>{cat.icon}</span>
         <span className="text-[10px] font-bold uppercase tracking-wide text-white">{cat.name}</span>
       </div>
       {/* Botões ignoram o drag */}
       <div className="flex items-center gap-1 opacity-0 group-hover/chip:opacity-100 transition-opacity"
         onPointerDown={e => e.stopPropagation()}>
         <button onClick={() => onToggle(cat)}
-          className="material-symbols-outlined text-xs transition-colors"
+          className="text-xs transition-colors px-1"
           style={{ color: cat.active ? G : '#555' }}>
-          {cat.active ? 'visibility' : 'visibility_off'}
+          {cat.active ? '👁' : '🚫'}
         </button>
         <button onClick={() => onRemove(cat.id)}
-          className="material-symbols-outlined text-xs text-red-500/50 hover:text-red-500 transition-colors">
-          close
+          className="text-xs px-1 text-red-500/50 hover:text-red-500 transition-colors">
+          ✕
         </button>
       </div>
     </div>
@@ -129,10 +135,9 @@ function ParentBlock({ parent, children, onToggle, onRemove, isDragging }) {
 
       {/* Header */}
       <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-xl leading-none"
           style={{ background: parent.active ? G : '#222' }}>
-          <span className="material-symbols-outlined text-base"
-            style={{ color: parent.active ? '#000' : '#555' }}>{parent.icon}</span>
+          {parent.icon}
         </div>
         <div className="flex-1 min-w-0">
           <p className="font-black text-xs uppercase tracking-tighter truncate text-white"
@@ -152,8 +157,8 @@ function ParentBlock({ parent, children, onToggle, onRemove, isDragging }) {
           {parent.active ? '● Ativo' : '○ Oculto'}
         </button>
         <button onClick={() => onRemove(parent.id)}
-          className="px-2.5 rounded-lg transition-all text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20">
-          <span className="material-symbols-outlined text-sm">delete</span>
+          className="px-2.5 rounded-lg transition-all text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 text-sm">
+          ✕
         </button>
       </div>
 
@@ -196,9 +201,9 @@ function RootDropZone({ cats, onToggle, onRemove, isDragging }) {
 function DragGhost({ cat }) {
   if (!cat) return null;
   return (
-    <div className="flex items-center gap-2 px-3 py-2 rounded-xl shadow-2xl"
+    <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl shadow-2xl"
       style={{ background: G, color: '#000', border: `1px solid ${G}`, opacity: 0.95, pointerEvents: 'none' }}>
-      <span className="material-symbols-outlined text-sm text-black">{cat.icon}</span>
+      <span className="text-lg leading-none">{cat.icon}</span>
       <span className="text-[11px] font-black uppercase tracking-wide">{cat.name}</span>
     </div>
   );
@@ -556,13 +561,13 @@ export default function AdminPage() {
                 </div>
                 <div>
                   <label className="text-[9px] font-black uppercase tracking-widest block mb-1" style={{color:G}}>Ícone</label>
-                  <div className="grid grid-cols-6 gap-1 p-1 rounded-xl bg-[#1a1a1a] border border-[#2a2a2a]" style={{height:46}}>
+                  <div className="flex flex-wrap gap-1 p-2 rounded-xl bg-[#1a1a1a] border border-[#2a2a2a]" style={{maxHeight:80,overflowY:'auto'}}>
                     {ICONS.map(ic=>(
                       <button key={ic.id} type="button" title={ic.label}
                         onClick={()=>setNewCat({...newCat,icon:ic.id})}
-                        className="p-1 rounded-lg flex items-center justify-center transition-all"
-                        style={newCat.icon===ic.id?{background:G,color:'#000'}:{color:'rgba(255,255,255,0.25)'}}>
-                        <span className="material-symbols-outlined text-xs">{ic.id}</span>
+                        className="w-8 h-8 flex items-center justify-center rounded-lg text-lg transition-all"
+                        style={newCat.icon===ic.id?{background:G,transform:'scale(1.15)'}:{background:'#252525'}}>
+                        {ic.id}
                       </button>
                     ))}
                   </div>
@@ -576,7 +581,7 @@ export default function AdminPage() {
             {/* Instrução drag */}
             {categories.length > 0 && (
               <div className="flex items-center gap-3 px-5 py-3 rounded-2xl" style={{background:'rgba(34,197,94,0.04)',border:'1px solid rgba(34,197,94,0.12)'}}>
-                <span className="material-symbols-outlined text-base" style={{color:G}}>drag_indicator</span>
+                <span className="text-base">✋</span>
                 <p className="text-[11px] font-bold uppercase tracking-widest" style={{color:'rgba(34,197,94,0.7)'}}>
                   Segure e arraste qualquer chip (subcategoria) para dentro de outro bloco pai
                 </p>
