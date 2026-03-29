@@ -1,12 +1,16 @@
 import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { data } from '../data';
+import { useSiteData } from '../hooks/useSiteData';
+import { useProducts } from '../hooks/useProducts';
+import { urlFor } from '../sanity/client';
 import SideMenu from '../components/SideMenu';
 import WhatsAppButton from '../components/WhatsAppButton';
 
 export default function CategoryPage() {
   const { categoryId, subId } = useParams();
   const navigate = useNavigate();
+  const { data } = useSiteData();
+  const { products: allProducts } = useProducts();
   const [menuOpen, setMenuOpen] = useState(false);
 
   // Encontrar info da categoria
@@ -19,7 +23,7 @@ export default function CategoryPage() {
 
   // Filtrar produtos
   const products = useMemo(() => {
-    let filtered = data.products.filter(p => p.status === 'ativo');
+    let filtered = allProducts.filter(p => p.status === 'ativo');
 
     if (categoryId === 'marcas' && subId) {
       // Filtrar por marca
@@ -111,9 +115,9 @@ export default function CategoryPage() {
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
               {products.map(p => (
-                <div key={p.id} className="group cursor-pointer" onClick={() => navigate(`/produto/${p.id}`)}>
+                <div key={p.id || p._id} className="group cursor-pointer" onClick={() => navigate(`/produto/${p.id || p._id}`)}>
                   <div className="relative aspect-[3/4] overflow-hidden rounded-xl md:rounded-2xl bg-surface-container-low mb-3 md:mb-5 transition-transform duration-500 hover:scale-[1.02]">
-                    <img src={p.image} alt={p.name} className="w-full h-full object-cover grayscale brightness-90 group-hover:brightness-100 transition-all duration-700" />
+                    <img src={p.image?.asset ? urlFor(p.image).url() : p.image} alt={p.name} className="w-full h-full object-cover grayscale brightness-90 group-hover:brightness-100 transition-all duration-700" />
                     {p.featured && (
                       <div className="absolute top-3 left-3 md:top-5 md:left-5">
                         <span className="bg-primary text-on-primary px-3 py-1 rounded-full text-[10px] md:text-[11px] font-bold uppercase tracking-widest">Destaque</span>

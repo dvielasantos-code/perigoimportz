@@ -1,6 +1,7 @@
-import { data } from '../data';
+import { useSiteData } from '../hooks/useSiteData';
 
 export default function WhatsAppButton() {
+  const { data } = useSiteData();
   return (
     <a
       href={`https://wa.me/${data.whatsapp}`}

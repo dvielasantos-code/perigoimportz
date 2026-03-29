@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { data } from '../data';
+import { useSiteData } from '../hooks/useSiteData';
 
 export default function SideMenu({ isOpen, onClose }) {
+  const { data } = useSiteData();
   const [expanded, setExpanded] = useState(null);
   const navigate = useNavigate();
 
