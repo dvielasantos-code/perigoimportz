@@ -41,6 +41,7 @@ export const schemaTypes = [
       { name: 'name', title: 'Nome da Categoria (Ex: Camisetas)', type: 'string', validation: (Rule) => Rule.required() },
       { name: 'slug', title: 'ID Único da url (Ex: camisetas)', type: 'string', validation: (Rule) => Rule.required() },
       { name: 'icon', title: 'Nome do Ícone do Google (Ex: checkroom, straighten, school)', type: 'string' },
+      { name: 'active', title: 'Mostrar no Menu Oficial?', type: 'boolean', initialValue: true },
       { name: 'subcategories', title: 'Nomes das Subcategorias (Ex: regata, jaqueta)', type: 'array', of: [{type: 'string'}], description: 'Adicione as subcategorias desta seção (se houver)' }
     ]
   },
