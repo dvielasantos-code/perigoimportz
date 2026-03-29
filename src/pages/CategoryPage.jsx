@@ -131,7 +131,16 @@ export default function CategoryPage() {
                   <div className="flex flex-col gap-1 px-1">
                     <h3 className="font-extrabold text-sm md:text-lg tracking-tighter uppercase text-white leading-tight">{p.name}</h3>
                     <p className="text-white/40 text-[11px] md:text-xs font-medium line-clamp-1 hidden md:block">{p.description}</p>
-                    <span className="font-black text-sm md:text-base text-white mt-1">R$ {p.price.toFixed(0)}</span>
+                    <div className="flex items-center gap-2 mt-1">
+                      {p.promoPrice ? (
+                        <>
+                          <span className="font-black text-sm md:text-lg text-red-500">R$ {p.promoPrice.toFixed(0)}</span>
+                          <span className="font-bold text-[10px] md:text-xs text-white/30 line-through">R$ {p.price.toFixed(0)}</span>
+                        </>
+                      ) : (
+                        <span className="font-black text-sm md:text-base text-white">R$ {p.price.toFixed(0)}</span>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}

@@ -12,8 +12,10 @@ export default function ProductPage() {
   const { data } = useSiteData();
   const { products: allProducts } = useProducts();
   const [selectedSize, setSelectedSize] = useState(null);
+  const [mainImage, setMainImage] = useState(null);
 
   useEffect(() => {
+    if (product) setMainImage(product.image);
     setSelectedSize(null);
   }, [productId]);
 
@@ -30,7 +32,8 @@ export default function ProductPage() {
   }
 
   const sizes = ['P', 'M', 'G', 'GG', 'XG'];
-  const categoryInfo = data.categories.find(c => c.id === product.category);
+  const categoryInfo = data.menuCategories.find(c => c.id === product.category) || 
+                       data.menuCategories.flatMap(c => c.subcategories || []).find(sc => sc.id === product.category);
 
   // Produtos relacionados (mesma categoria, excluindo o atual)
   const related = allProducts.filter(p => p.category === product.category && (p.id || p._id) !== (product.id || product._id) && p.status === 'ativo').slice(0, 4);
@@ -76,19 +79,29 @@ export default function ProductPage() {
         <div className="flex flex-col md:flex-row gap-8 md:gap-16 px-6 md:px-8">
           {/* Imagem */}
           <div className="md:w-1/2 lg:w-[55%]">
-            <div className="relative aspect-[3/4] md:aspect-[4/5] rounded-2xl md:rounded-3xl overflow-hidden bg-surface-container-low">
-              <img src={product.image} alt={product.name} className="w-full h-full object-cover transition-all duration-700" />
-              {product.featured && (
+            <div className="relative aspect-[3/4] md:aspect-[4/5] rounded-2xl md:rounded-3xl overflow-hidden bg-surface-container-low mb-4">
+              <img src={mainImage || product.image} alt={product.name} className="w-full h-full object-cover transition-all duration-700" />
+              {product.promoPrice && (
                 <div className="absolute top-4 left-4 md:top-6 md:left-6">
-                  <span className="bg-primary text-on-primary px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest">Destaque</span>
-                </div>
-              )}
-              {product.brand && (
-                <div className="absolute top-4 right-4 md:top-6 md:right-6">
-                  <span className="bg-black/60 backdrop-blur-sm text-white/90 px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider">{product.brand}</span>
+                  <span className="bg-red-600 text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg animate-pulse">Oferta</span>
                 </div>
               )}
             </div>
+            
+            {/* Gallery */}
+            {product.images && product.images.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                {product.images.map((img, idx) => (
+                  <button 
+                    key={idx} 
+                    onClick={() => setMainImage(img)}
+                    className={`shrink-0 w-20 h-24 rounded-lg overflow-hidden border-2 transition-all ${mainImage === img ? 'border-white scale-105' : 'border-transparent opacity-50 hover:opacity-100'}`}
+                  >
+                    <img src={img} className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Info */}
@@ -111,8 +124,20 @@ export default function ProductPage() {
 
             {/* Preço */}
             <div className="mb-8">
-              <span className="text-3xl md:text-4xl font-black text-white">R$ {product.price.toFixed(2)}</span>
-              <p className="text-white/30 text-xs mt-2 font-medium">ou 3x de R$ {(product.price / 3).toFixed(2)} sem juros</p>
+              {product.promoPrice ? (
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-baseline gap-4">
+                    <span className="text-3xl md:text-5xl font-black text-red-500">R$ {product.promoPrice.toFixed(2)}</span>
+                    <span className="text-lg md:text-xl font-bold text-white/30 line-through">R$ {product.price.toFixed(2)}</span>
+                  </div>
+                  <p className="text-white/30 text-xs font-medium">ou 3x de R$ {(product.promoPrice / 3).toFixed(2)} sem juros</p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-1">
+                  <span className="text-3xl md:text-5xl font-black text-white">R$ {product.price.toFixed(2)}</span>
+                  <p className="text-white/30 text-xs font-medium">ou 3x de R$ {(product.price / 3).toFixed(2)} sem juros</p>
+                </div>
+              )}
             </div>
 
             {/* Descrição */}

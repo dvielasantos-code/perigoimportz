@@ -85,7 +85,16 @@ export default function MobileHome() {
                             </div>
                             <div className="px-0.5">
                                 <h4 className="font-extrabold text-xs tracking-tighter uppercase text-white leading-tight">{p.name}</h4>
-                                <span className="font-black text-white text-sm mt-1 block">R$ {p.price.toFixed(0)}</span>
+                                <div className="flex items-center gap-2 mt-1">
+                                    {p.promoPrice ? (
+                                        <>
+                                            <span className="font-black text-red-500 text-[13px]">R$ {p.promoPrice.toFixed(0)}</span>
+                                            <span className="font-bold text-white/30 text-[10px] line-through">R$ {p.price.toFixed(0)}</span>
+                                        </>
+                                    ) : (
+                                        <span className="font-black text-white text-sm">R$ {p.price.toFixed(0)}</span>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     ))}

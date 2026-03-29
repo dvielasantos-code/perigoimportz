@@ -21,12 +21,45 @@ export default function AdminPage() {
 
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState(null);
+  const [files, setFiles] = useState([]); // Multiple files
 
   // Estados dos Formulários
-  const [newProduct, setNewProduct] = useState({ name: '', price: '', category: 'camisetas', brand: 'perigo', description: '', status: 'ativo', featured: true });
-  const [newCategory, setNewCategory] = useState({ id: '', name: '', icon: 'apparel' });
+  const [newProduct, setNewProduct] = useState({ 
+    name: '', 
+    price: '', 
+    promoPrice: '',
+    category: 'camisetas', 
+    brand: 'perigo', 
+    description: '', 
+    status: 'ativo', 
+    featured: true,
+    images: [] // Array for multiple images
+  });
+  
+  const [newCategory, setNewCategory] = useState({ 
+    id: '', 
+    name: '', 
+    icon: 'apparel',
+    parentId: null,
+    active: true
+  });
   const [newBanner, setNewBanner] = useState({ title: '', link: '' });
   const [newBrand, setNewBrand] = useState({ name: '' });
+
+  const ICON_LIST = [
+    { id: 'apparel', name: 'Camiseta' },
+    { id: 'steps', name: 'Tênis' },
+    { id: 'diamond', name: 'Acessório' },
+    { id: 'watch', name: 'Relógio' },
+    { id: 'glasses', name: 'Óculos' },
+    { id: 'hat', name: 'Boné' },
+    { id: 'laundry', name: 'Calça' },
+    { id: 'checkroom', name: 'Jaqueta' },
+    { id: 'dry_cleaning', name: 'Regata' },
+    { id: 'styler', name: 'Conjunto' },
+    { id: 'shopping_bag', name: 'Bolsa' },
+    { id: 'workspace_premium', name: 'Premium' }
+  ];
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, u => {
@@ -92,15 +125,49 @@ export default function AdminPage() {
   const addProduct = async (e) => {
     e.preventDefault();
     setLoading(true);
-    let imageUrl = '';
-    if (file) {
-      imageUrl = await uploadCloudinary(file);
-      if(!imageUrl) { setLoading(false); return; }
+    
+    let imageUrls = [];
+    
+    // Upload de múltiplas fotos
+    if (files.length > 0) {
+      for (let f of files) {
+        const url = await uploadCloudinary(f);
+        if(url) imageUrls.push(url);
+      }
+    } else if (file) {
+      // Fallback para arquivo único se ainda existir
+      const url = await uploadCloudinary(file);
+      if(url) imageUrls.push(url);
     }
-    await addDoc(collection(db, "products"), { ...newProduct, price: Number(newProduct.price), image: imageUrl });
+
+    if (imageUrls.length === 0) {
+       alert("Selecione pelo menos uma foto para o produto.");
+       setLoading(false);
+       return;
+    }
+
+    await addDoc(collection(db, "products"), { 
+      ...newProduct, 
+      price: Number(newProduct.price), 
+      promoPrice: newProduct.promoPrice ? Number(newProduct.promoPrice) : null,
+      image: imageUrls[0], // Foto principal
+      images: imageUrls    // Todas as fotos
+    });
+
     alert('Produto cadastrado com sucesso!');
-    setNewProduct({ name: '', price: '', category: 'camisetas', brand: 'perigo', description: '', status: 'ativo', featured: true });
+    setNewProduct({ 
+      name: '', 
+      price: '', 
+      promoPrice: '',
+      category: 'camisetas', 
+      brand: 'perigo', 
+      description: '', 
+      status: 'ativo', 
+      featured: true,
+      images: []
+    });
     setFile(null);
+    setFiles([]);
     loadAllData();
     setLoading(false);
   };
@@ -108,11 +175,21 @@ export default function AdminPage() {
   const addCategory = async (e) => {
     e.preventDefault();
     setLoading(true);
-    await setDoc(doc(db, "categories", newCategory.id.toLowerCase().replace(/\s+/g, '-')), { ...newCategory, active: true });
+    const catId = newCategory.id.toLowerCase().replace(/\s+/g, '-');
+    await setDoc(doc(db, "categories", catId), { 
+      ...newCategory, 
+      id: catId,
+      active: true 
+    });
     alert('Categoria salva!');
-    setNewCategory({ id: '', name: '', icon: 'apparel' });
+    setNewCategory({ id: '', name: '', icon: 'apparel', parentId: null, active: true });
     loadAllData();
     setLoading(false);
+  };
+
+  const toggleCategoryStatus = async (cat) => {
+    await setDoc(doc(db, "categories", cat.id), { ...cat, active: !cat.active });
+    loadAllData();
   };
 
   const addBanner = async (e) => {
@@ -222,57 +299,93 @@ export default function AdminPage() {
           </div>
 
           {activeTab === 'produtos' && (
-          <div className="grid lg:grid-cols-2 gap-8 animate-fade-in">
-             <div className="bg-[#121214] p-6 border border-white/5 h-fit max-h-[700px] overflow-y-auto custom-scrollbar">
-              <h2 className="text-xl font-black mb-6 uppercase tracking-tighter">Gerenciar Produtos ({products.length})</h2>
-              <div className="flex flex-col gap-2">
-                {products.length === 0 && <p className="text-xs text-white/30 font-bold uppercase tracking-widest text-center py-8">Nenhum produto cadastrado.</p>}
+          <div className="grid lg:grid-cols-3 gap-8 animate-fade-in">
+             <div className="lg:col-span-2 bg-[#121214] p-6 border border-white/5 h-fit max-h-[850px] overflow-y-auto custom-scrollbar">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-black uppercase tracking-tighter">Produtos no Catálogo ({products.length})</h2>
+                <div className="flex gap-2">
+                   <input placeholder="Pesquisar produto..." className="p-2 bg-[#1c1c1f] text-[10px] border border-white/5 outline-none w-48 font-bold uppercase tracking-widest" />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {products.length === 0 && <p className="col-span-2 text-xs text-white/30 font-bold uppercase tracking-widest text-center py-8">Nenhum produto cadastrado.</p>}
                 {products.map(p => (
-                  <div key={p.id} className="flex items-center justify-between p-3 bg-[#1c1c1f] hover:bg-white/5 transition-colors group">
+                  <div key={p.id} className="flex items-center justify-between p-3 bg-[#1c1c1f] hover:bg-white/5 transition-colors group border border-white/5">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-16 bg-black overflow-hidden relative">
+                      <div className="w-16 h-20 bg-black overflow-hidden relative">
                         {p.image && <img src={p.image} className="w-full h-full object-cover transition-all" />}
+                        {p.images && p.images.length > 1 && (
+                          <div className="absolute bottom-1 right-1 bg-white text-black text-[8px] px-1 font-black">+{p.images.length - 1}</div>
+                        )}
                       </div>
                       <div>
-                        <h3 className="font-extrabold text-xs tracking-tighter uppercase">{p.name}</h3>
-                        <p className="text-[10px] text-white/50 font-bold tracking-widest uppercase mt-1">R$ {p.price} • {p.category}</p>
+                        <h3 className="font-extrabold text-xs tracking-tighter uppercase line-clamp-1">{p.name}</h3>
+                        <div className="flex items-center gap-2 mt-1">
+                          {p.promoPrice ? (
+                            <>
+                              <p className="text-[10px] text-red-500 font-black tracking-widest uppercase">R$ {p.promoPrice}</p>
+                              <p className="text-[9px] text-white/30 line-through font-bold">R$ {p.price}</p>
+                            </>
+                          ) : (
+                            <p className="text-[10px] text-white/50 font-bold tracking-widest uppercase">R$ {p.price}</p>
+                          )}
+                        </div>
+                        <p className="text-[8px] text-white/30 font-black uppercase tracking-[0.2em] mt-1">{p.category}</p>
                       </div>
                     </div>
-                    <button onClick={() => deleteDocument('products', p.id)} className="text-white/20 hover:text-red-500 text-lg font-bold px-4 transition-colors">&times;</button>
+                    <div className="flex flex-col gap-2">
+                       <button onClick={() => deleteDocument('products', p.id)} className="text-white/20 hover:text-red-500 text-lg font-bold px-2 transition-colors">&times;</button>
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="bg-[#121214] p-6 border border-white/5">
+            <div className="bg-[#121214] p-6 border border-white/5 h-fit">
               <h2 className="text-xl font-black mb-6 uppercase tracking-tighter">Adicionar Produto</h2>
               <form onSubmit={addProduct} className="flex flex-col gap-4 text-sm">
                 <input required placeholder="Nome do Produto (Ex: Camiseta Monolith)" value={newProduct.name} onChange={e => setNewProduct({...newProduct, name: e.target.value})} className="p-3 bg-[#1c1c1f] text-white outline-none w-full border border-white/5 focus:border-white/20" />
                 
-                <div className="flex gap-4">
-                  <input required type="number" step="0.01" placeholder="Preço (199.90)" value={newProduct.price} onChange={e => setNewProduct({...newProduct, price: e.target.value})} className="p-3 bg-[#1c1c1f] text-white outline-none w-1/2 border border-white/5" />
-                  <select required value={newProduct.category} onChange={e => setNewProduct({...newProduct, category: e.target.value})} className="p-3 bg-[#1c1c1f] text-white outline-none w-1/2 border border-white/5 uppercase text-xs font-bold tracking-widest">
-                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[9px] font-black text-white/30 uppercase tracking-widest">Preço Normal</label>
+                    <input required type="number" step="0.01" placeholder="199.90" value={newProduct.price} onChange={e => setNewProduct({...newProduct, price: e.target.value})} className="p-3 bg-[#1c1c1f] text-white outline-none border border-white/5" />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[9px] font-black text-red-500/50 uppercase tracking-widest">Preço Promo (Opcional)</label>
+                    <input type="number" step="0.01" placeholder="149.90" value={newProduct.promoPrice} onChange={e => setNewProduct({...newProduct, promoPrice: e.target.value})} className="p-3 bg-[#1c1c1f] text-white outline-none border border-white/5" />
+                  </div>
                 </div>
 
-                <div className="flex gap-4 items-center mt-2">
-                  <label className="flex items-center gap-2 cursor-pointer text-xs uppercase tracking-widest font-bold text-white/70">
-                    <input type="checkbox" checked={newProduct.featured} onChange={e => setNewProduct({...newProduct, featured: e.target.checked})} className="accent-white w-4 h-4" />
-                    Produto em Destaque
-                  </label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[9px] font-black text-white/30 uppercase tracking-widest">Categoria</label>
+                    <select required value={newProduct.category} onChange={e => setNewProduct({...newProduct, category: e.target.value})} className="p-3 bg-[#1c1c1f] text-white outline-none border border-white/5 uppercase text-[10px] font-bold tracking-widest">
+                      {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[9px] font-black text-white/30 uppercase tracking-widest">Destaque</label>
+                    <div className="flex items-center h-full">
+                      <label className="flex items-center gap-2 cursor-pointer text-[10px] uppercase tracking-widest font-bold text-white/70">
+                        <input type="checkbox" checked={newProduct.featured} onChange={e => setNewProduct({...newProduct, featured: e.target.checked})} className="accent-white w-4 h-4" />
+                        Sim
+                      </label>
+                    </div>
+                  </div>
                 </div>
 
-                <textarea required placeholder="Descrição detalhada do produto..." rows="3" value={newProduct.description} onChange={e => setNewProduct({...newProduct, description: e.target.value})} className="p-3 bg-[#1c1c1f] text-white outline-none w-full border border-white/5 focus:border-white/20" />
+                <textarea required placeholder="Descrição detalhada..." rows="4" value={newProduct.description} onChange={e => setNewProduct({...newProduct, description: e.target.value})} className="p-3 bg-[#1c1c1f] text-white outline-none w-full border border-white/5 focus:border-white/20" />
                 
                 <div className="p-6 bg-[#1f1f22] border border-dashed border-white/20 flex flex-col items-center justify-center gap-3 transition-colors hover:border-white/40 cursor-pointer relative">
-                  <span className="text-xs uppercase font-black text-white/50 tracking-widest">Foto do Cloudinary</span>
-                  <input type="file" accept="image/*" onChange={e => setFile(e.target.files[0])} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                  {file && <span className="text-white text-xs font-bold bg-white/10 px-3 py-1 rounded-full">{file.name} selecionado</span>}
+                  <span className="text-[10px] uppercase font-black text-white/50 tracking-[0.2em] text-center">Arraste ou Selecione até 7 fotos</span>
+                  <input type="file" multiple accept="image/*" onChange={e => setFiles(Array.from(e.target.files).slice(0, 7))} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                  {files.length > 0 && <span className="text-white text-[10px] font-bold bg-white/10 px-3 py-1 rounded-full">{files.length} fotos selecionadas</span>}
                 </div>
 
-                <button type="submit" disabled={loading} className="mt-4 bg-white hover:bg-white/80 text-black font-black uppercase tracking-widest py-4 transition-colors flex justify-center items-center text-xs">
-                  {loading ? <span className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" /> : "Publicar Catálogo"}
+                <button type="submit" disabled={loading} className="mt-4 bg-white hover:bg-white/80 text-black font-black uppercase tracking-[0.3em] py-4 transition-colors flex justify-center items-center text-[10px]">
+                  {loading ? <span className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" /> : "ADICIONAR AO CATÁLOGO"}
                 </button>
               </form>
             </div>
@@ -280,32 +393,109 @@ export default function AdminPage() {
           )}
 
           {activeTab === 'categorias' && (
-          <div className="grid md:grid-cols-2 gap-8 animate-fade-in">
+          <div className="flex flex-col gap-8 animate-fade-in">
+            {/* Form de Criação Rapida */}
              <div className="bg-[#121214] p-6 border border-white/5">
-              <h2 className="text-xl font-black mb-6 uppercase tracking-tighter">Nova Categoria</h2>
-              <form onSubmit={addCategory} className="flex flex-col gap-4 text-sm">
-                <input required placeholder="ID da categoria (Sem espaço. Ex: moletons)" value={newCategory.id} onChange={e => setNewCategory({...newCategory, id: e.target.value.toLowerCase().replace(/\s+/g, '-')})} className="p-3 bg-[#1c1c1f] text-white outline-none w-full border border-white/5" />
-                <input required placeholder="Nome de Exibição (Ex: Moletons Premium)" value={newCategory.name} onChange={e => setNewCategory({...newCategory, name: e.target.value})} className="p-3 bg-[#1c1c1f] text-white outline-none w-full border border-white/5" />
-                <select value={newCategory.icon} onChange={e => setNewCategory({...newCategory, icon: e.target.value})} className="p-3 bg-[#1c1c1f] text-white outline-none w-full border border-white/5 text-xs font-bold uppercase tracking-widest">
-                  <option value="apparel">Ícone Roupa</option>
-                  <option value="steps">Ícone Tênis</option>
-                  <option value="diamond">Ícone Acessório</option>
-                  <option value="clock">Ícone Relógio</option>
-                  <option value="glasses">Ícone Óculos</option>
-                  <option value="hat">Ícone Boné</option>
-                </select>
-                <button type="submit" disabled={loading} className="mt-4 bg-white text-black font-black uppercase tracking-widest py-4 text-xs hover:bg-white/80">Criar Categoria</button>
+              <h2 className="text-xl font-black mb-6 uppercase tracking-tighter">Criar Nova Categoria</h2>
+              <form onSubmit={addCategory} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end text-sm">
+                <div className="flex flex-col gap-2">
+                  <label className="text-[10px] font-bold uppercase text-white/40 tracking-widest">Nome de Exibição</label>
+                  <input required placeholder="Ex: Camisetas Oversized" value={newCategory.name} onChange={e => setNewCategory({...newCategory, name: e.target.value, id: e.target.value})} className="p-3 bg-[#1c1c1f] text-white outline-none border border-white/5" />
+                </div>
+                
+                <div className="flex flex-col gap-2">
+                  <label className="text-[10px] font-bold uppercase text-white/40 tracking-widest">Categoria Pai (Opcional)</label>
+                  <select value={newCategory.parentId || ''} onChange={e => setNewCategory({...newCategory, parentId: e.target.value || null})} className="p-3 bg-[#1c1c1f] text-white outline-none border border-white/5 text-xs font-bold uppercase">
+                    <option value="">Nenhuma (Principal)</option>
+                    {categories.filter(c => !c.parentId).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-[10px] font-bold uppercase text-white/40 tracking-widest">Ícone Visual</label>
+                  <div className="grid grid-cols-6 gap-1 bg-[#1c1c1f] p-1 border border-white/5 max-h-[46px] overflow-y-auto custom-scrollbar">
+                    {ICON_LIST.map(icon => (
+                      <button 
+                        type="button" 
+                        key={icon.id} 
+                        onClick={() => setNewCategory({...newCategory, icon: icon.id})}
+                        className={`p-1 flex items-center justify-center transition-all ${newCategory.icon === icon.id ? 'bg-white text-black' : 'text-white/40 hover:bg-white/10'}`}
+                        title={icon.name}
+                      >
+                        <span className="material-symbols-outlined text-sm">{icon.id}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <button type="submit" disabled={loading} className="bg-white text-black font-black uppercase tracking-widest h-[46px] text-xs hover:bg-white/80 transition-colors">Criar Agora</button>
               </form>
              </div>
-             <div className="bg-[#121214] p-6 border border-white/5">
-              <h2 className="text-xl font-black mb-6 uppercase tracking-tighter">Navegação ({categories.length})</h2>
-              <div className="flex flex-col gap-2">
-                {categories.map(c => (
-                  <div key={c.id} className="flex justify-between p-4 bg-[#1c1c1f] text-xs font-bold uppercase tracking-widest">
-                    <span>{c.name} ({c.id})</span>
-                    <button onClick={() => deleteDocument('categories', c.id)} className="text-red-500 hover:text-white">&times;</button>
+
+             {/* Mapa Mental / Tree View das Categorias */}
+             <div className="bg-[#121214] p-8 border border-white/5 min-h-[500px]">
+              <h2 className="text-xl font-black mb-10 uppercase tracking-tighter">Estrutura do Mapa Mental</h2>
+              
+              <div className="flex flex-wrap gap-12 items-start">
+                {categories.filter(c => !c.parentId).map(parent => (
+                  <div key={parent.id} className="flex flex-col items-center group relative">
+                    {/* Categoria Pai */}
+                    <div className={`w-[220px] p-4 border rounded-xl flex flex-col items-center gap-3 transition-all relative z-10 ${parent.active ? 'bg-white border-white' : 'bg-red-500/10 border-red-500/30'}`}>
+                      <div className={`p-3 rounded-full ${parent.active ? 'bg-black text-white' : 'bg-red-500 text-white'}`}>
+                        <span className="material-symbols-outlined text-2xl">{parent.icon}</span>
+                      </div>
+                      <span className={`font-black uppercase tracking-tighter text-sm ${parent.active ? 'text-black' : 'text-red-500/60'}`}>{parent.name}</span>
+                      
+                      <div className="flex items-center gap-2 mt-2 w-full pt-3 border-t border-black/10">
+                        <button onClick={() => toggleCategoryStatus(parent)} className={`flex-1 py-1.5 rounded-lg text-white font-bold text-[9px] uppercase tracking-widest transition-colors ${parent.active ? 'bg-green-600' : 'bg-gray-600'}`}>
+                          {parent.active ? 'ATIVO' : 'OCULTO'}
+                        </button>
+                        <button onClick={() => deleteDocument('categories', parent.id)} className="p-1.5 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-lg transition-colors">
+                          <span className="material-symbols-outlined text-xs">delete</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Linha Conectora para Subcategorias */}
+                    {categories.some(sub => sub.parentId === parent.id) && (
+                      <div className="w-[2px] h-8 bg-white/10" />
+                    )}
+
+                    {/* Subcategorias */}
+                    <div className="flex flex-col gap-2 w-full">
+                      {categories.filter(sub => sub.parentId === parent.id).map(sub => (
+                        <div key={sub.id} className={`p-3 rounded-lg border flex items-center justify-between gap-4 group/sub transition-all ${sub.active ? 'bg-[#1c1c1f] border-white/5' : 'bg-red-500/5 border-red-500/20'}`}>
+                          <div className="flex items-center gap-3">
+                            <span className={`material-symbols-outlined text-sm ${sub.active ? 'text-white/40' : 'text-red-500/40'}`}>{sub.icon || 'subdirectory_arrow_right'}</span>
+                            <span className={`text-[11px] font-bold uppercase tracking-widest ${sub.active ? 'text-white/80' : 'text-red-500/40'}`}>{sub.name}</span>
+                          </div>
+                          <div className="flex items-center gap-2 opacity-0 group-hover/sub:opacity-100 transition-opacity">
+                            <button onClick={() => toggleCategoryStatus(sub)} className={`material-symbols-outlined text-sm ${sub.active ? 'text-green-500' : 'text-gray-500'}`}>
+                              {sub.active ? 'visibility' : 'visibility_off'}
+                            </button>
+                            <button onClick={() => deleteDocument('categories', sub.id)} className="material-symbols-outlined text-sm text-red-500">close</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Botão para add sub rápido */}
+                    <button 
+                      onClick={() => setNewCategory({...newCategory, parentId: parent.id})}
+                      className="mt-4 w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white hover:text-black transition-all"
+                      title="Adicionar Subcategoria"
+                    >
+                      <span className="material-symbols-outlined text-sm">add</span>
+                    </button>
                   </div>
                 ))}
+
+                {/* Bloco Vazio de Adição */}
+                {categories.length === 0 && (
+                   <div className="w-full flex justify-center items-center h-[300px] border border-dashed border-white/10 rounded-2xl">
+                     <p className="text-white/20 font-bold uppercase tracking-[0.3em] text-xs">Crie sua primeira categoria principal acima.</p>
+                   </div>
+                )}
               </div>
              </div>
           </div>

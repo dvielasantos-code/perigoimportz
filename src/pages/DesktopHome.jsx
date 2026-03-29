@@ -93,7 +93,16 @@ export default function DesktopHome() {
                 <div className="flex flex-col gap-1.5">
                   <div className="flex justify-between items-start">
                     <h3 className="font-['Manrope'] text-lg font-extrabold tracking-tighter uppercase text-white">{p.name}</h3>
-                    <span className="font-['Inter'] text-base font-bold text-white shrink-0 ml-3">R$ {p.price.toFixed(0)}</span>
+                    <div className="flex flex-col items-end">
+                      {p.promoPrice ? (
+                        <>
+                          <span className="font-['Inter'] text-lg font-bold text-red-500 shrink-0">R$ {p.promoPrice.toFixed(0)}</span>
+                          <span className="font-['Inter'] text-xs font-medium text-white/30 line-through">R$ {p.price.toFixed(0)}</span>
+                        </>
+                      ) : (
+                        <span className="font-['Inter'] text-base font-bold text-white shrink-0">R$ {p.price.toFixed(0)}</span>
+                      )}
+                    </div>
                   </div>
                   <p className="text-white/40 text-sm font-medium line-clamp-1">{p.description}</p>
                 </div>

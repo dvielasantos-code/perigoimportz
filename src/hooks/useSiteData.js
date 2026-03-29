@@ -11,12 +11,18 @@ export function useSiteData() {
     // Escuta Categorias
     const qCats = query(collection(db, "categories"), where("active", "==", true));
     const unsubCats = onSnapshot(qCats, (snap) => {
-      const cats = snap.docs.map(d => d.data());
-      // Ordena pelas posições originais ou como vier
+      const allCats = snap.docs.map(d => d.data());
+      
+      // Constrói hierarquia
+      const parents = allCats.filter(c => !c.parentId);
+      const builtMenu = parents.map(p => ({
+        ...p,
+        subcategories: allCats.filter(c => c.parentId === p.id)
+      }));
       
       setSiteData(prev => ({
         ...prev,
-        menuCategories: cats
+        menuCategories: builtMenu
       }));
     });
 
