@@ -66,6 +66,24 @@ const ICONS = [
 
 const G = '#22c55e';
 
+// Fallback: categorias antigas no Firestore ainda têm nomes de Material Symbols
+const ICON_MAP = {
+  apparel:      '👕',
+  dry_cleaning: '🎽',
+  checkroom:    '🧥',
+  laundry:      '👖',
+  steps:        '👟',
+  hat:          '🧢',
+  diamond:      '💎',
+  watch:        '⌚',
+  eyeglasses:   '🕶️',
+  shopping_bag: '👜',
+  styler:       '👔',
+  sports:       '🏃',
+  category:     '📦',
+};
+const ri = icon => ICON_MAP[icon] || icon || '📦';
+
 // ─── Chip draggável ───────────────────────────────────────────────────────────
 function DraggableChip({ cat, onToggle, onRemove }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: cat.id });
@@ -85,7 +103,7 @@ function DraggableChip({ cat, onToggle, onRemove }) {
     >
       <div className="flex items-center gap-2 pointer-events-none">
         <span className="text-xs text-[#555]">⠿</span>
-        <span className="text-base leading-none" style={{ opacity: cat.active ? 1 : 0.4 }}>{cat.icon}</span>
+        <span className="text-base leading-none" style={{ opacity: cat.active ? 1 : 0.4 }}>{ri(cat.icon)}</span>
         <span className="text-[10px] font-bold uppercase tracking-wide text-white">{cat.name}</span>
       </div>
       {/* Botões ignoram o drag */}
@@ -137,7 +155,7 @@ function ParentBlock({ parent, children, onToggle, onRemove, isDragging }) {
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-xl leading-none"
           style={{ background: parent.active ? G : '#222' }}>
-          {parent.icon}
+          {ri(parent.icon)}
         </div>
         <div className="flex-1 min-w-0">
           <p className="font-black text-xs uppercase tracking-tighter truncate text-white"
@@ -203,7 +221,7 @@ function DragGhost({ cat }) {
   return (
     <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl shadow-2xl"
       style={{ background: G, color: '#000', border: `1px solid ${G}`, opacity: 0.95, pointerEvents: 'none' }}>
-      <span className="text-lg leading-none">{cat.icon}</span>
+      <span className="text-lg leading-none">{ri(cat.icon)}</span>
       <span className="text-[11px] font-black uppercase tracking-wide">{cat.name}</span>
     </div>
   );
@@ -212,6 +230,7 @@ function DragGhost({ cat }) {
 // ─── Página principal ─────────────────────────────────────────────────────────
 export default function AdminPage() {
   const [user, setUser]           = useState(null);
+  const [authLoading, setAuthLoading] = useState(true); // evita flash login
   const [email, setEmail]         = useState('');
   const [password, setPassword]   = useState('');
   const [loginErr, setLoginErr]   = useState('');
@@ -230,7 +249,7 @@ export default function AdminPage() {
   const [newProduct, setNewProduct] = useState({
     name:'', price:'', promoPrice:'', category:'', brand:'', description:'', status:'ativo', featured:true,
   });
-  const [newCat, setNewCat]         = useState({ name:'', icon:'apparel', parentId:null });
+  const [newCat, setNewCat]         = useState({ name:'', icon:'👕', parentId:null });
   const [newBanner, setNewBanner]   = useState({ title:'', link:'' });
 
   // dnd-kit
@@ -238,7 +257,11 @@ export default function AdminPage() {
   const [activeId, setActiveId] = useState(null);
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, u => { setUser(u); if (u) loadAll(); });
+    const unsub = onAuthStateChanged(auth, u => {
+      setUser(u);
+      setAuthLoading(false);
+      if (u) loadAll();
+    });
     return () => unsub();
   }, []);
 
@@ -377,6 +400,18 @@ export default function AdminPage() {
   const activeCat   = categories.find(c => c.id === activeId);
 
   // ─── Login ─────────────────────────────────────────────────────────────────
+  // Aguarda Firebase restaurar sessão (evita flash do login)
+  if (authLoading) return (
+    <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{background:G}}>
+          <span className="text-black font-black text-sm">PI</span>
+        </div>
+        <div className="w-6 h-6 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    </div>
+  );
+
   if (!user) return (
     <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
       <div className="w-full max-w-sm p-8 rounded-2xl bg-[#111] border border-[#222]">
