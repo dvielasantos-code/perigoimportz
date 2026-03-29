@@ -116,7 +116,7 @@ export default function CategoryPage() {
               {products.map(p => (
                 <div key={p.id || p._id} className="group cursor-pointer" onClick={() => navigate(`/produto/${p.id || p._id}`)}>
                   <div className="relative aspect-[3/4] overflow-hidden rounded-xl md:rounded-2xl bg-surface-container-low mb-3 md:mb-5 transition-transform duration-500 hover:scale-[1.02]">
-                    <img src={p.image} alt={p.name} className="w-full h-full object-cover grayscale brightness-90 group-hover:brightness-100 transition-all duration-700" />
+                    <img src={p.image} alt={p.name} className="w-full h-full object-cover transition-all duration-700" />
                     {p.featured && (
                       <div className="absolute top-3 left-3 md:top-5 md:left-5">
                         <span className="bg-primary text-on-primary px-3 py-1 rounded-full text-[10px] md:text-[11px] font-bold uppercase tracking-widest">Destaque</span>

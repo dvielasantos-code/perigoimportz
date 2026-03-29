@@ -34,7 +34,7 @@ export default function MobileHome() {
                 <div className="relative w-full aspect-[3/4] rounded-b-3xl overflow-hidden group">
                     <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBdso03s2h1V8LfKMtiajCAAMOq8t0GfkW8B4cTVQeQO29ytbjJfXzkkYkfIOwWCOMCyN_PV81XZfRNn6deAxRSdOrSRh8P3ZvBFwd5phxoW3KWlygiW6vJGPAaO8j2S1IvWzuKpbwF-UGFHIyUXuU6xzn3lsa9pQxb03y0T7rXzXgFH4K00IYnefqSNR-SIYCJMbdGHoE-_DzEZcmITZZwHfzHQRwA-4qFB6KRIBMNNdZTdwXrkozGQke_Q_FOZdSfHWE5FaCosrgd" 
                          alt="Hero" 
-                         className="w-full h-full object-cover grayscale brightness-75 transition-transform duration-700" />
+                         className="w-full h-full object-cover transition-transform duration-700" />
                     <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent flex flex-col justify-end p-6">
                         <span className="text-white text-[10px] font-bold uppercase tracking-[.3em] mb-2 font-['Inter']">Coleção 2024</span>
                         <h2 className="text-3xl font-extrabold tracking-tighter leading-[0.9] mb-4 uppercase text-white">ARQUIVOS<br/>OBSCUROS</h2>
@@ -76,7 +76,7 @@ export default function MobileHome() {
                     {featured.map(p => (
                         <div key={p.id || p._id} className="group flex flex-col gap-3 cursor-pointer" onClick={() => navigate(`/produto/${p.id || p._id}`)}>
                             <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-surface-container-low">
-                                <img src={p.image} alt={p.name} className="w-full h-full object-cover grayscale brightness-90 active:scale-105 transition-transform" />
+                                <img src={p.image} alt={p.name} className="w-full h-full object-cover active:scale-105 transition-transform" />
                                 {p.featured && (
                                     <div className="absolute top-2 left-2">
                                         <span className="bg-primary text-on-primary text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest">Novo</span>

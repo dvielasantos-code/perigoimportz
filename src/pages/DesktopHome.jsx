@@ -37,7 +37,7 @@ export default function DesktopHome() {
           <div className="relative w-full aspect-video md:aspect-[21/7] overflow-hidden group">
             <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBR8WfMT6yGX8Qp6mJAVYg4ZjzaURdfQ-4zQd6vFb2NvbMfMnRBo7I0ns1KZWn9BM1gp0zL4yRZrecudGHQD6MmyPSkq_ZLz89njFzqG77SqTXrzWKJqNpgM2fSIOYakZes1Jfki-FpOEBZXCfcyhHm1AowjgI7Polcfjg1w-YDkXUMAGeu9WCJND6amT-tEGaLzglsjQ8NITY8zjItt-DvEiUJioZeOSfH37_TTJ80Z37s9Cng8j4kfiTUvX-SJDCPFNaDXIvmafg9" 
                  alt="Hero" 
-                 className="w-full h-full object-cover grayscale transition-transform duration-700 group-hover:scale-105" />
+                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-12">
               <span className="font-['Inter'] text-sm tracking-[0.2em] uppercase text-white/70 mb-4 font-medium">Drop 01 // Arquivo 2024</span>
               <h2 className="text-6xl md:text-8xl font-black tracking-tighter text-white mb-6 uppercase leading-[0.9]">ESSENCIAIS<br/>OBSCUROS</h2>
@@ -78,7 +78,7 @@ export default function DesktopHome() {
             {featured.map(p => (
               <div key={p.id || p._id} className="group cursor-pointer" onClick={() => navigate(`/produto/${p.id || p._id}`)}>
                 <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-surface-container-low mb-5 transition-transform duration-500 hover:scale-[1.02]">
-                  <img src={p.image} alt={p.name} className="w-full h-full object-cover grayscale brightness-90 group-hover:brightness-100 transition-all duration-700" />
+                  <img src={p.image} alt={p.name} className="w-full h-full object-cover transition-all duration-700" />
                   {p.featured && (
                     <div className="absolute top-5 left-5">
                       <span className="bg-primary text-on-primary px-4 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-widest">Destaque</span>

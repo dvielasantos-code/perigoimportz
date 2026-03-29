@@ -1,0 +1,1 @@
+export const iconList = [{id:'apparel', name:'Camiseta'},{id:'steps', name:'Tênis'},{id:'diamond', name:'Colar'},{id:'watch', name:'Relógio'},{id:'hat', name:'Boné'},{id:'glasses', name:'Óculos'},{id:'laundry', name:'Calça'},{id:'checkroom', name:'Jaqueta'},{id:'dry_cleaning', name:'Regata'}];
