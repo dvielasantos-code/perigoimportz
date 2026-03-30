@@ -196,6 +196,7 @@ export default function AdminPage() {
   // dnd-kit
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
   const [activeId, setActiveId] = useState(null);
+  const { setNodeRef: setRootDropRef } = useDroppable({ id: 'drop:__root__' });
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, u => {
@@ -603,7 +604,7 @@ export default function AdminPage() {
               >
                 {activeId && (
                   <div className="mb-2">
-                    <div ref={useDroppable({ id: 'drop:__root__' }).setNodeRef}
+                    <div ref={setRootDropRef}
                       className="p-4 rounded-xl border-2 border-dashed transition-all flex items-center justify-center gap-2"
                       style={{
                          background: 'rgba(34,197,94,0.05)',
