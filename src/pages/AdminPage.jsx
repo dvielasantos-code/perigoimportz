@@ -55,7 +55,7 @@ const ICON_MAP = {
 const ri = icon => ICON_MAP[icon] || icon || '📦';
 
 // ─── Componentes de Categoria Draggável ──────────────────────────────────────
-function CategoryRow({ cat, onToggle, onRemove, isChild, children = [], isDraggingParent }) {
+function CategoryRow({ cat, onToggle, onRemove, isChild, children = [], isDraggingParent, isSelected, onSelect, selectedCats }) {
   const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({ id: cat.id });
   const { setNodeRef: setDropSortRef, isOver } = useDroppable({ id: cat.id });
   const { setNodeRef: setDropNestRef, isOver: isNestOver } = useDroppable({ id: `drop:${cat.id}` });
@@ -78,6 +78,7 @@ function CategoryRow({ cat, onToggle, onRemove, isChild, children = [], isDraggi
           position: 'relative'
         }}
       >
+        <input type="checkbox" checked={isSelected} onChange={() => onSelect(cat.id)} className="w-5 h-5 accent-red-500 mr-1 cursor-pointer" />
         <div ref={setDragRef} {...listeners} {...attributes} className="cursor-grab active:cursor-grabbing text-[#555] hover:text-white px-2">
           <span className="material-symbols-outlined text-xl">drag_indicator</span>
         </div>
@@ -106,7 +107,7 @@ function CategoryRow({ cat, onToggle, onRemove, isChild, children = [], isDraggi
       {!isChild && children && children.length > 0 && (
          <div className="flex flex-col gap-2 mt-1 mb-2">
            {children.map(sub => (
-             <CategoryRow key={sub.id} cat={sub} onToggle={onToggle} onRemove={onRemove} isChild />
+             <CategoryRow key={sub.id} cat={sub} onToggle={onToggle} onRemove={onRemove} isChild selectedCats={selectedCats} isSelected={selectedCats.has(sub.id)} onSelect={onSelect} />
            ))}
          </div>
       )}
@@ -165,6 +166,32 @@ export default function AdminPage() {
   });
   const [newCat, setNewCat]         = useState({ name:'', icon:'👕', parentId:null });
   const [newBanner, setNewBanner]   = useState({ title:'', link:'' });
+  const [selectedCats, setSelectedCats] = useState(new Set());
+
+  const toggleSelectCat = (id) => {
+    const next = new Set(selectedCats);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedCats(next);
+  };
+
+  const selectAllCats = () => {
+    if (selectedCats.size === categories.length) setSelectedCats(new Set());
+    else setSelectedCats(new Set(categories.map(c => c.id)));
+  };
+
+  const deleteSelectedCats = async () => {
+    if (!window.confirm(`Excluir ${selectedCats.size} categorias selecionadas de uma vez?`)) return;
+    setLoading(true);
+    // Para simplificar e evitar problemas de assincronicidade pesada no cliente, deletamos em lote (batch-like loop)
+    for (const id of Array.from(selectedCats)) {
+      await deleteDoc(doc(db, 'categories', id));
+    }
+    setSelectedCats(new Set());
+    await loadAll();
+    setLoading(false);
+  };
+
 
   // dnd-kit
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
@@ -556,6 +583,19 @@ export default function AdminPage() {
                 <p className="text-[10px] mt-2 text-[#2a2a2a]">Crie uma acima para começar</p>
               </div>
             ) : (
+              <>
+              <div className="flex items-center justify-between mb-4 p-4 rounded-xl" style={{background: selectedCats.size > 0 ? 'rgba(239,68,68,0.1)' : '#111', border: `1px solid ${selectedCats.size > 0 ? '#ef4444' : '#222'}`}}>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input type="checkbox" checked={categories.length > 0 && selectedCats.size === categories.length} onChange={selectAllCats} className="w-5 h-5 accent-red-500" />
+                  <span className="text-xs font-black uppercase tracking-widest text-white">Selecionar Tudo</span>
+                </label>
+                {selectedCats.size > 0 && (
+                  <button onClick={deleteSelectedCats} disabled={loading} className="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest transition-colors">
+                    <span className="material-symbols-outlined text-sm">delete_sweep</span>
+                    Excluir {selectedCats.size}
+                  </button>
+                )}
+              </div>
               <DndContext
                 sensors={sensors}
                 onDragStart={handleDragStart}
@@ -586,6 +626,9 @@ export default function AdminPage() {
                       onRemove={id => remove('categories', id)}
                       isChild={false}
                       isDraggingParent={activeId === parent.id}
+                      selectedCats={selectedCats}
+                      isSelected={selectedCats.has(parent.id)}
+                      onSelect={toggleSelectCat}
                     />
                   ))}
                 </div>
@@ -594,6 +637,7 @@ export default function AdminPage() {
                   <DragGhost cat={activeCat} />
                 </DragOverlay>
               </DndContext>
+              </>
             )}
           </div>
         )}
