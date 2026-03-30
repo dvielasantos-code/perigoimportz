@@ -32,85 +32,104 @@ export default function DesktopHome() {
         </div>
       </header>
 
-      {/* Banner */}
+      {/* Dynamic Content from Site Builder */}
       <main className="pt-[88px]">
-        <section className="mb-20">
-          <div className="relative w-full aspect-video md:aspect-[21/7] overflow-hidden group">
-            <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBR8WfMT6yGX8Qp6mJAVYg4ZjzaURdfQ-4zQd6vFb2NvbMfMnRBo7I0ns1KZWn9BM1gp0zL4yRZrecudGHQD6MmyPSkq_ZLz89njFzqG77SqTXrzWKJqNpgM2fSIOYakZes1Jfki-FpOEBZXCfcyhHm1AowjgI7Polcfjg1w-YDkXUMAGeu9WCJND6amT-tEGaLzglsjQ8NITY8zjItt-DvEiUJioZeOSfH37_TTJ80Z37s9Cng8j4kfiTUvX-SJDCPFNaDXIvmafg9" 
-                 alt="Hero" 
-                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-12">
-              <span className="font-['Inter'] text-sm tracking-[0.2em] uppercase text-white/70 mb-4 font-medium">Drop 01 // Arquivo 2024</span>
-              <h2 className="text-6xl md:text-8xl font-black tracking-tighter text-white mb-6 uppercase leading-[0.9]">ESSENCIAIS<br/>OBSCUROS</h2>
-              <button className="bg-primary text-on-primary px-10 py-4 rounded-full font-bold text-sm tracking-widest uppercase hover:opacity-90 transition-all w-fit">Explorar Coleção</button>
-            </div>
-          </div>
-        </section>
-
-        {/* Categories - 5 visíveis, carrossel auto, cards clicáveis */}
-        <section className="px-8 mb-32">
-          <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-white/50 mb-6 font-['Inter']">Categorias Principais</h3>
-          <AutoCarousel speed={0.4} gap={16}>
-            {data.categories.map(cat => (
-              <div 
-                key={cat.id} 
-                onClick={() => navigate(`/categoria/${cat.id}`)}
-                style={{ width: 'calc((100vw - 64px - 64px) / 5)' }} 
-                className="shrink-0 group relative aspect-[4/3] rounded-xl overflow-hidden bg-surface-container-low flex flex-col items-center justify-center cursor-pointer hover:bg-surface-container transition-colors duration-500"
-              >
-                <CustomIcon name={cat.icon} className="w-8 h-8 mb-3 group-hover:scale-110 transition-transform duration-500 text-white" />
-                <span className="font-['Manrope'] font-bold text-base tracking-tight text-white">{cat.name}</span>
-              </div>
-            ))}
-          </AutoCarousel>
-        </section>
-
-        {/* Featured Products */}
-        <section className="px-8 mb-32">
-          <div className="flex justify-between items-end mb-12">
-            <div>
-              <h3 className="text-4xl font-black tracking-tighter uppercase mb-2 text-white">Destaques</h3>
-              <p className="text-white/50 font-['Manrope'] text-base font-medium">Peças selecionadas pela nossa curadoria.</p>
-            </div>
-            <a href="#" className="text-sm font-bold underline underline-offset-8 tracking-tighter hover:text-white transition-colors text-white/60">VER TUDO</a>
-          </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {featured.map(p => (
-              <div key={p.id || p._id} className="group cursor-pointer" onClick={() => navigate(`/produto/${p.id || p._id}`)}>
-                <div className="relative aspect-square overflow-hidden rounded-xl bg-surface-container-low mb-5 transition-transform duration-500 hover:scale-[1.02]">
-                  <img src={p.image} alt={p.name} className="w-full h-full object-cover transition-all duration-700" />
-                  {p.featured && (
-                    <div className="absolute top-5 left-5">
-                      <span className="bg-primary text-on-primary px-4 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-widest">Destaque</span>
-                    </div>
-                  )}
-                  {p.brand && (
-                    <div className="absolute bottom-5 right-5">
-                      <span className="bg-black/60 backdrop-blur-sm text-white/80 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">{p.brand}</span>
-                    </div>
-                  )}
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <div className="flex justify-between items-start">
-                    <h3 className="font-['Manrope'] text-lg font-extrabold tracking-tighter uppercase text-white">{p.name}</h3>
-                    <div className="flex flex-col items-end">
-                      {p.promoPrice ? (
-                        <>
-                          <span className="font-['Inter'] text-lg font-bold text-white shrink-0">R$ {p.promoPrice.toFixed(0)}</span>
-                          <span className="font-['Inter'] text-xs font-medium text-white/30 line-through">R$ {p.price.toFixed(0)}</span>
-                        </>
-                      ) : (
-                        <span className="font-['Inter'] text-base font-bold text-white shrink-0">R$ {p.price.toFixed(0)}</span>
-                      )}
-                    </div>
+        {(data.home_layout || []).map((section) => {
+          if (section.type === 'hero_banner') {
+            return (
+              <section key={section.id} className="mb-20">
+                <div className="relative w-full aspect-video md:aspect-[21/7] overflow-hidden group">
+                  <img src={data.banners?.[0]?.image || "https://lh3.googleusercontent.com/aida-public/AB6AXuBR8WfMT6yGX8Qp6mJAVYg4ZjzaURdfQ-4zQd6vFb2NvbMfMnRBo7I0ns1KZWn9BM1gp0zL4yRZrecudGHQD6MmyPSkq_ZLz89njFzqG77SqTXrzWKJqNpgM2fSIOYakZes1Jfki-FpOEBZXCfcyhHm1AowjgI7Polcfjg1w-YDkXUMAGeu9WCJND6amT-tEGaLzglsjQ8NITY8zjItt-DvEiUJioZeOSfH37_TTJ80Z37s9Cng8j4kfiTUvX-SJDCPFNaDXIvmafg9"} 
+                       alt="Hero" 
+                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-12">
+                    <span className="font-['Inter'] text-sm tracking-[0.2em] uppercase text-white/70 mb-4 font-medium">Drop 01 // Arquivo 2024</span>
+                    <h2 className="text-6xl md:text-8xl font-black tracking-tighter text-white mb-6 uppercase leading-[0.9]">ESSENCIAIS<br/>OBSCUROS</h2>
+                    <button className="bg-[#22c55e] text-black px-10 py-4 rounded-sm font-bold text-sm tracking-widest uppercase hover:opacity-90 transition-all w-fit" onClick={() => navigate(data.banners?.[0]?.link || '/')}>Explorar Coleção</button>
                   </div>
-                  <p className="text-white/40 text-sm font-medium line-clamp-1">{p.description}</p>
                 </div>
-              </div>
-            ))}
-          </div>
-        </section>
+              </section>
+            );
+          }
+
+          if (section.type === 'categories') {
+            return (
+              <section key={section.id} className="px-8 mb-32">
+                <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-white/50 mb-6 font-['Inter']">{section.title || 'Categorias Principais'}</h3>
+                <AutoCarousel speed={0.4} gap={16}>
+                  {data.categories.map(cat => (
+                    <div 
+                      key={cat.id} 
+                      onClick={() => navigate(`/categoria/${cat.id}`)}
+                      style={{ width: 'calc((100vw - 64px - 64px) / 5)' }} 
+                      className="shrink-0 group relative aspect-[4/3] rounded-md overflow-hidden bg-surface-container-low flex flex-col items-center justify-center cursor-pointer hover:bg-surface-container transition-colors duration-500"
+                    >
+                      <CustomIcon name={cat.icon} className="w-8 h-8 mb-3 group-hover:scale-110 transition-transform duration-500 text-white" />
+                      <span className="font-['Manrope'] font-bold text-base tracking-tight text-white">{cat.name}</span>
+                    </div>
+                  ))}
+                </AutoCarousel>
+              </section>
+            );
+          }
+
+          if (section.type === 'collection') {
+            const filtered = products.filter(p => {
+              if (section.filter === 'featured') return p.featured;
+              if (section.filter === 'promo') return p.promoPrice;
+              return true;
+            }).slice(0, 8);
+
+            return (
+              <section key={section.id} className="px-8 mb-32">
+                <div className="flex justify-between items-end mb-12">
+                  <div>
+                    <h3 className="text-4xl font-black tracking-tighter uppercase mb-2 text-white">{section.title}</h3>
+                    <p className="text-white/50 font-['Manrope'] text-base font-medium">Peças selecionadas pela nossa curadoria.</p>
+                  </div>
+                  <a href="#" className="text-sm font-bold underline underline-offset-8 tracking-tighter hover:text-white transition-colors text-white/60">VER TUDO</a>
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                  {filtered.map(p => (
+                    <div key={p.id || p._id} className="group cursor-pointer" onClick={() => navigate(`/produto/${p.id || p._id}`)}>
+                      <div className="relative aspect-square overflow-hidden rounded-md bg-surface-container-low mb-5 transition-transform duration-500 hover:scale-[1.02]">
+                        <img src={p.image} alt={p.name} className="w-full h-full object-cover transition-all duration-700" />
+                        {p.featured && (
+                          <div className="absolute top-5 left-5">
+                            <span className="bg-[#22c55e] text-black px-4 py-1.5 rounded-sm text-[11px] font-bold uppercase tracking-widest">Destaque</span>
+                          </div>
+                        )}
+                        {p.brand && (
+                          <div className="absolute bottom-5 right-5">
+                            <span className="bg-black/60 backdrop-blur-sm text-white/80 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">{p.brand}</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex justify-between items-start">
+                          <h3 className="font-['Manrope'] text-lg font-extrabold tracking-tighter uppercase text-white">{p.name}</h3>
+                          <div className="flex flex-col items-end">
+                            {p.promoPrice ? (
+                              <>
+                                <span className="font-['Inter'] text-lg font-bold text-white shrink-0">R$ {p.promoPrice.toFixed(0)}</span>
+                                <span className="font-['Inter'] text-xs font-medium text-white/30 line-through">R$ {p.price.toFixed(0)}</span>
+                              </>
+                            ) : (
+                              <span className="font-['Inter'] text-base font-bold text-white shrink-0">R$ {p.price.toFixed(0)}</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            );
+          }
+
+          return null;
+        })}
       </main>
 
       {/* Footer */}

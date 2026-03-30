@@ -523,10 +523,10 @@ export default function AdminPage() {
     const next = cur.includes(sz) ? cur.filter(s => s !== sz) : [...cur, sz];
     return next;
   };
-  const tabs = [
     {id:'produtos',      label:'Produtos',      icon:'apparel'},
     {id:'categorias',    label:'Categorias',    icon:'category'},
     {id:'banners',       label:'Banners',       icon:'photo_library'},
+    {id:'layout',        label:'Site Builder',  icon:'dashboard'},
     {id:'configuracoes', label:'Config',        icon:'settings'},
   ];
 
@@ -1029,6 +1029,151 @@ export default function AdminPage() {
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ══ SITE BUILDER (LAYOUT) ══ */}
+        {activeTab==='layout' && (
+          <div className="grid grid-cols-12 gap-6">
+            <div className="col-span-4 flex flex-col gap-4">
+              <div className="p-5 rounded-md bg-[#111] border border-[#1e1e1e]">
+                <h3 className="text-xs font-black uppercase tracking-widest mb-4">Adicionar Seção</h3>
+                <div className="flex flex-col gap-2">
+                  <button onClick={async () => {
+                    const title = prompt("Título da Coleção (ex: Novidades):");
+                    if(title) {
+                      await addDoc(collection(db, 'home_layout'), { 
+                        type: 'collection', 
+                        title, 
+                        order: (data.home_layout?.length || 0),
+                        active: true,
+                        filter: 'featured'
+                      });
+                    }
+                  }} className="w-full p-3 rounded-md bg-[#1a1a1a] border border-[#2a2a2a] text-[10px] font-bold uppercase tracking-widest hover:border-green-500 transition-all flex items-center gap-2">
+                    <span className="material-symbols-outlined text-sm">add_circle</span>
+                    + Coleção de Produtos
+                  </button>
+                  <button onClick={async () => {
+                      await addDoc(collection(db, 'home_layout'), { 
+                        type: 'categories', 
+                        title: 'Navegar por',
+                        order: (data.home_layout?.length || 0),
+                        active: true
+                      });
+                  }} className="w-full p-3 rounded-md bg-[#1a1a1a] border border-[#2a2a2a] text-[10px] font-bold uppercase tracking-widest hover:border-green-500 transition-all flex items-center gap-2">
+                    <span className="material-symbols-outlined text-sm">category</span>
+                    + Carrossel de Categorias
+                  </button>
+                  <button onClick={async () => {
+                      await addDoc(collection(db, 'home_layout'), { 
+                        type: 'hero_banner', 
+                        order: (data.home_layout?.length || 0),
+                        active: true
+                      });
+                  }} className="w-full p-3 rounded-md bg-[#1a1a1a] border border-[#2a2a2a] text-[10px] font-bold uppercase tracking-widest hover:border-green-500 transition-all flex items-center gap-2">
+                    <span className="material-symbols-outlined text-sm">featured_video</span>
+                    + Banner Hero Principal
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-5 rounded-md bg-[#111] border border-[#1e1e1e]">
+                <h3 className="text-xs font-black uppercase tracking-widest mb-4">Estrutura da Home</h3>
+                <div className="flex flex-col gap-2">
+                  {(data.home_layout || []).map((sec, idx) => (
+                    <div key={sec.id} className="flex items-center gap-3 p-3 rounded-md bg-[#1a1a1a] border border-[#2a2a2a] group">
+                      <div className="flex flex-col">
+                        <button disabled={idx===0} onClick={async () => {
+                          const prev = data.home_layout[idx-1];
+                          await setDoc(doc(db, 'home_layout', sec.id), { ...sec, order: idx-1 });
+                          await setDoc(doc(db, 'home_layout', prev.id), { ...prev, order: idx });
+                        }} className="p-0.5 hover:text-green-500 disabled:opacity-30">
+                          <span className="material-symbols-outlined text-xs">keyboard_arrow_up</span>
+                        </button>
+                        <button disabled={idx===(data.home_layout?.length || 0)-1} onClick={async () => {
+                          const next = data.home_layout[idx+1];
+                          await setDoc(doc(db, 'home_layout', sec.id), { ...sec, order: idx+1 });
+                          await setDoc(doc(db, 'home_layout', next.id), { ...next, order: idx });
+                        }} className="p-0.5 hover:text-green-500 disabled:opacity-30">
+                          <span className="material-symbols-outlined text-xs">keyboard_arrow_down</span>
+                        </button>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-[10px] font-black uppercase tracking-tighter text-white">
+                          {sec.type === 'collection' ? `Coleção: ${sec.title}` : 
+                           sec.type === 'hero_banner' ? 'Banner Principal' : 
+                           sec.type === 'categories' ? 'Carr. Categorias' : sec.type}
+                        </p>
+                      </div>
+                      <button onClick={() => deleteDoc(doc(db, 'home_layout', sec.id))} className="text-[#444] hover:text-red-500">
+                        <span className="material-symbols-outlined text-sm">delete</span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Preview Simulation */}
+            <div className="col-span-8 p-6 rounded-md bg-[#000] border border-[#1e1e1e] min-h-[80vh]">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-xs font-black uppercase tracking-widest text-green-500">Preview (Visualização)</h3>
+                <div className="flex gap-2">
+                  <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                  <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                </div>
+              </div>
+
+              <div className="max-w-[375px] mx-auto border-4 border-[#1a1a1a] rounded-[2.5rem] overflow-hidden bg-[#131313] shadow-2xl">
+                <div className="h-6 bg-[#1a1a1a]"></div>
+                <div className="p-4 flex justify-between items-center border-b border-[#1a1a1a]">
+                  <span className="material-symbols-outlined text-white text-sm">menu</span>
+                  <span className="text-[10px] font-black uppercase tracking-tighter">PERIGOIMPORTZ</span>
+                  <span className="material-symbols-outlined text-white text-sm">search</span>
+                </div>
+                
+                <div className="overflow-y-auto h-[600px] no-scrollbar">
+                  {(data.home_layout || []).map(sec => (
+                    <div key={sec.id} className="border-b border-[#1a1a1a] relative">
+                      {sec.type === 'hero_banner' && (
+                        <div className="aspect-[3/4] bg-[#222] flex flex-col justify-end p-4">
+                          <div className="h-2 w-12 bg-[#333] mb-2 rounded"></div>
+                          <div className="h-6 w-3/4 bg-[#333] mb-4 rounded"></div>
+                          <div className="h-8 w-24 bg-[#22c55e] rounded-sm"></div>
+                        </div>
+                      )}
+                      {sec.type === 'categories' && (
+                        <div className="p-4">
+                          <p className="text-[8px] font-bold uppercase text-white/50 mb-3">Navegar por</p>
+                          <div className="flex gap-2">
+                            {[1,2,3].map(i => <div key={i} className="w-16 h-16 rounded bg-[#1a1a1a] shrink-0"></div>)}
+                          </div>
+                        </div>
+                      )}
+                      {sec.type === 'collection' && (
+                        <div className="p-4">
+                          <div className="mb-4">
+                             <p className="text-sm font-black uppercase tracking-tighter text-white">{sec.title}</p>
+                             <p className="text-[8px] text-white/40 uppercase">Curadoria</p>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                             {[1,2].map(i => (
+                               <div key={i} className="flex flex-col gap-2">
+                                 <div className="aspect-square bg-[#1a1a1a] rounded-md"></div>
+                                 <div className="h-1.5 w-full bg-[#1a1a1a] rounded"></div>
+                                 <div className="h-1.5 w-1/2 bg-[#1a1a1a] rounded"></div>
+                               </div>
+                             ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
