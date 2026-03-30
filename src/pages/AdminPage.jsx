@@ -579,63 +579,55 @@ export default function AdminPage() {
                   </div>
                 )}
 
-                {/* Grid 2 colunas */}
-                <div className="grid grid-cols-2 gap-2">
+                {/* 2 colunas - linhas compactas horizontais */}
+                <div className="grid grid-cols-2 gap-1.5">
                   {filteredProds.map(p=>(
                     <div key={p.id}
-                      className="flex flex-col rounded-md border transition-all overflow-hidden"
+                      className="flex items-center gap-2 p-2 border transition-all"
                       style={{
                         background: selectedProds.has(p.id) ? 'rgba(239,68,68,0.07)' : '#191919',
-                        borderColor: selectedProds.has(p.id) ? '#ef4444' : '#242424'
+                        borderColor: selectedProds.has(p.id) ? '#ef4444' : '#242424',
+                        borderRadius: 6
                       }}>
 
-                      {/* Foto top */}
-                      <div className="relative w-full aspect-[4/3] bg-[#111]">
+                      {/* Checkbox */}
+                      <input type="checkbox"
+                        checked={selectedProds.has(p.id)}
+                        onChange={()=>toggleSelectProd(p.id)}
+                        className="w-3.5 h-3.5 accent-red-500 shrink-0 cursor-pointer"
+                      />
+
+                      {/* Thumbnail pequeno */}
+                      <div className="w-8 h-10 shrink-0 bg-[#222] overflow-hidden" style={{borderRadius:4}}>
                         {p.image && <img src={p.image} className="w-full h-full object-cover"/>}
-                        {/* overlay ações */}
-                        <div className="absolute top-1.5 left-1.5">
-                          <input type="checkbox"
-                            checked={selectedProds.has(p.id)}
-                            onChange={()=>toggleSelectProd(p.id)}
-                            className="w-4 h-4 accent-red-500 cursor-pointer"
-                          />
-                        </div>
-                        <div className="absolute top-1.5 right-1.5 flex flex-col gap-1">
-                          <label className="relative inline-flex items-center cursor-pointer" title={p.status==='ativo'?'Desativar':'Ativar'}>
-                            <input type="checkbox" className="sr-only peer" checked={p.status==='ativo'} onChange={()=>toggleProdActive(p)} />
-                            <div className="w-7 h-3.5 bg-[#333] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[1px] after:left-[1px] after:bg-white after:border after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:bg-green-500"></div>
-                          </label>
-                        </div>
-                        {p.status !== 'ativo' && (
-                          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                            <span className="text-[9px] font-black uppercase tracking-widest text-white/60">Inativo</span>
-                          </div>
-                        )}
                       </div>
 
-                      {/* Info bottom */}
-                      <div className="p-2">
-                        <p className="font-black text-[10px] uppercase tracking-tight truncate text-white">{p.name}</p>
-                        <div className="flex items-center justify-between mt-1">
-                          <div className="flex items-center gap-1">
-                            {p.promoPrice
-                              ? <><span style={{color:G}} className="font-black text-[10px]">R${Number(p.promoPrice).toFixed(0)}</span><span className="line-through text-[9px] text-[#444]">R${Number(p.price).toFixed(0)}</span></>
-                              : <span className="font-bold text-[10px] text-[#888]">R${Number(p.price).toFixed(0)}</span>}
-                          </div>
-                          <div className="flex gap-1">
-                            <button onClick={()=>setEditingProd({...p})} className="p-1 rounded text-[#555] hover:text-white hover:bg-[#333] transition-all">
-                              <span className="material-symbols-outlined text-xs">edit</span>
-                            </button>
-                            <button onClick={()=>remove('products',p.id)} className="p-1 rounded text-[#555] hover:text-red-500 hover:bg-red-500/10 transition-all">
-                              <span className="material-symbols-outlined text-xs">delete</span>
-                            </button>
-                          </div>
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-black text-[10px] uppercase tracking-tight truncate text-white" style={{opacity:p.status==='ativo'?1:0.45}}>
+                          {p.name}
+                        </p>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          {p.promoPrice
+                            ? <><span style={{color:G}} className="font-black text-[9px]">R${Number(p.promoPrice).toFixed(0)}</span><span className="line-through text-[8px] text-[#444]">R${Number(p.price).toFixed(0)}</span></>
+                            : <span className="font-bold text-[9px] text-[#777]">R${Number(p.price).toFixed(0)}</span>}
                         </div>
-                        {p.sizes && p.sizes.length > 0 && (
-                          <div className="flex flex-wrap gap-0.5 mt-1">
-                            {p.sizes.map(s=><span key={s} className="text-[8px] font-black px-1.5 py-0.5 rounded" style={{background:'#2a2a2a',color:'#888'}}>{s}</span>)}
-                          </div>
-                        )}
+                      </div>
+
+                      {/* Ações compactas */}
+                      <div className="flex flex-col items-end gap-1 shrink-0">
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input type="checkbox" className="sr-only peer" checked={p.status==='ativo'} onChange={()=>toggleProdActive(p)} />
+                          <div className="w-6 h-3 bg-[#333] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[1.5px] after:left-[1.5px] after:bg-white after:border after:rounded-full after:h-2 after:w-2 after:transition-all peer-checked:bg-green-500"></div>
+                        </label>
+                        <div className="flex gap-0.5">
+                          <button onClick={()=>setEditingProd({...p})} className="p-0.5 text-[#444] hover:text-white transition-colors">
+                            <span className="material-symbols-outlined" style={{fontSize:13}}>edit</span>
+                          </button>
+                          <button onClick={()=>remove('products',p.id)} className="p-0.5 text-[#444] hover:text-red-500 transition-colors">
+                            <span className="material-symbols-outlined" style={{fontSize:13}}>delete</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}
