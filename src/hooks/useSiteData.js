@@ -54,6 +54,16 @@ export function useSiteData() {
       }));
     });
 
+    // Escuta Coleções
+    const qCols = query(collection(db, "collections"), where("status", "==", "ativo"));
+    const unsubCols = onSnapshot(qCols, (snap) => {
+      const collections = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      setSiteData(prev => ({
+        ...prev,
+        collections
+      }));
+    });
+
     // Escuta Configs de Whatsapp e Endeço:
     getDoc(doc(db, "settings", "global")).then((snap) => {
       if(snap.exists()) {
@@ -67,6 +77,7 @@ export function useSiteData() {
       unsubCats();
       unsubBanners();
       unsubBrands();
+      unsubCols();
     };
   }, []);
 

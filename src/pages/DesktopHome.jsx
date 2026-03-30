@@ -35,15 +35,30 @@ export default function DesktopHome() {
       {/* Banner */}
       <main className="pt-[88px]">
         <section className="mb-20">
-          <div className="relative w-full aspect-video md:aspect-[21/7] overflow-hidden group">
-            <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBR8WfMT6yGX8Qp6mJAVYg4ZjzaURdfQ-4zQd6vFb2NvbMfMnRBo7I0ns1KZWn9BM1gp0zL4yRZrecudGHQD6MmyPSkq_ZLz89njFzqG77SqTXrzWKJqNpgM2fSIOYakZes1Jfki-FpOEBZXCfcyhHm1AowjgI7Polcfjg1w-YDkXUMAGeu9WCJND6amT-tEGaLzglsjQ8NITY8zjItt-DvEiUJioZeOSfH37_TTJ80Z37s9Cng8j4kfiTUvX-SJDCPFNaDXIvmafg9" 
-                 alt="Hero" 
-                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-12">
-              <span className="font-['Inter'] text-sm tracking-[0.2em] uppercase text-white/70 mb-4 font-medium">Drop 01 // Arquivo 2024</span>
-              <h2 className="text-6xl md:text-8xl font-black tracking-tighter text-white mb-6 uppercase leading-[0.9]">ESSENCIAIS<br/>OBSCUROS</h2>
-              <button className="bg-neon-green text-black px-10 py-4 rounded-lg font-bold text-sm tracking-widest uppercase hover:opacity-90 transition-all w-fit shadow-xl shadow-neon-green/20">Explorar Coleção</button>
-            </div>
+          <div className="relative w-full aspect-video md:aspect-[21/7] overflow-hidden group bg-neutral-900">
+            {data.collections?.[0] ? (
+              <>
+                <img src={data.collections[0].image} 
+                     alt={data.collections[0].title} 
+                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex flex-col justify-end p-12">
+                  <span className="font-['Inter'] text-sm tracking-[0.3em] uppercase text-white/50 mb-4 font-medium">{data.collections[0].subtitle || 'Drop 01'}</span>
+                  <h2 className="text-6xl md:text-8xl font-black tracking-tighter text-white mb-8 uppercase leading-[0.8]">{data.collections[0].title}</h2>
+                  <button onClick={() => navigate(data.collections[0].link || '#')} className="bg-neon-green text-black px-12 py-5 rounded-sm font-black text-xs tracking-widest uppercase hover:opacity-90 transition-all w-fit shadow-2xl shadow-neon-green/20">Explorar Coleção</button>
+                </div>
+              </>
+            ) : (
+              <>
+                <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBR8WfMT6yGX8Qp6mJAVYg4ZjzaURdfQ-4zQd6vFb2NvbMfMnRBo7I0ns1KZWn9BM1gp0zL4yRZrecudGHQD6MmyPSkq_ZLz89njFzqG77SqTXrzWKJqNpgM2fSIOYakZes1Jfki-FpOEBZXCfcyhHm1AowjgI7Polcfjg1w-YDkXUMAGeu9WCJND6amT-tEGaLzglsjQ8NITY8zjItt-DvEiUJioZeOSfH37_TTJ80Z37s9Cng8j4kfiTUvX-SJDCPFNaDXIvmafg9" 
+                     alt="Hero Fallback" 
+                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-12">
+                  <span className="font-['Inter'] text-sm tracking-[0.2em] uppercase text-white/70 mb-4 font-medium">Drop 01 // Arquivo 2024</span>
+                  <h2 className="text-6xl md:text-8xl font-black tracking-tighter text-white mb-6 uppercase leading-[0.9]">ESSENCIAIS<br/>OBSCUROS</h2>
+                  <button className="bg-neon-green text-black px-10 py-4 rounded-sm font-bold text-sm tracking-widest uppercase hover:opacity-90 transition-all w-fit shadow-xl shadow-neon-green/20">Explorar Coleção</button>
+                </div>
+              </>
+            )}
           </div>
         </section>
 
@@ -56,7 +71,7 @@ export default function DesktopHome() {
                 key={cat.id} 
                 onClick={() => navigate(`/categoria/${cat.id}`)}
                 style={{ width: 'calc((100vw - 64px - 64px) / 5)' }} 
-                className="shrink-0 group relative aspect-[4/3] rounded-xl overflow-hidden bg-surface-container-low flex flex-col items-center justify-center cursor-pointer hover:bg-surface-container transition-colors duration-500"
+                className="shrink-0 group relative aspect-[4/3] rounded-sm overflow-hidden bg-surface-container-low flex flex-col items-center justify-center cursor-pointer hover:bg-surface-container transition-colors duration-500"
               >
                 <CustomIcon name={cat.icon} className="w-8 h-8 mb-3 group-hover:scale-110 transition-transform duration-500 text-white" />
                 <span className="font-['Manrope'] font-bold text-base tracking-tight text-white">{cat.name}</span>
@@ -64,6 +79,27 @@ export default function DesktopHome() {
             ))}
           </AutoCarousel>
         </section>
+
+        {/* Coleções Grid */}
+        {data.collections?.length > 1 && (
+          <section className="px-8 mb-32">
+            <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-white/50 mb-8 font-['Inter']">Coleções em Destaque</h3>
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
+              {data.collections.slice(1, 4).map(col => (
+                <div key={col.id} 
+                  onClick={() => navigate(col.link || '#')}
+                  className="relative aspect-[16/9] rounded-sm overflow-hidden group cursor-pointer bg-neutral-900"
+                >
+                  <img src={col.image} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                  <div className="absolute inset-0 bg-black/40 p-10 flex flex-col justify-end">
+                    <p className="text-xs font-bold text-white/60 uppercase tracking-[0.2em] mb-2">{col.subtitle}</p>
+                    <h4 className="text-4xl font-black text-white uppercase tracking-tighter leading-none">{col.title}</h4>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Featured Products */}
         <section className="px-8 mb-32">

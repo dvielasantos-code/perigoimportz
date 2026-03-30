@@ -29,20 +29,59 @@ export default function MobileHome() {
             </div>
         </header>
 
-        {/* Banner mobile - altura reduzida: aspect-[3/4] → aspect-[4/3] */}
+        {/* Banner mobile - Hero dinâmico */}
         <main className="pt-[68px] overflow-x-hidden">
             <section className="mb-10 px-0">
-                <div className="relative w-full aspect-[4/3] rounded-b-xl overflow-hidden group">
-                    <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBdso03s2h1V8LfKMtiajCAAMOq8t0GfkW8B4cTVQeQO29ytbjJfXzkkYkfIOwWCOMCyN_PV81XZfRNn6deAxRSdOrSRh8P3ZvBFwd5phxoW3KWlygiW6vJGPAaO8j2S1IvWzuKpbwF-UGFHIyUXuU6xzn3lsa9pQxb03y0T7rXzXgFH4K00IYnefqSNR-SIYCJMbdGHoE-_DzEZcmITZZwHfzHQRwA-4qFB6KRIBMNNdZTdwXrkozGQke_Q_FOZdSfHWE5FaCosrgd" 
-                         alt="Hero" 
-                         className="w-full h-full object-cover transition-transform duration-700" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-background via-black/20 to-transparent flex flex-col justify-end p-6">
-                        <span className="text-white text-[10px] font-bold uppercase tracking-[.3em] mb-2 font-['Inter']">Coleção 2024</span>
-                        <h2 className="text-3xl font-extrabold tracking-tighter leading-[0.9] mb-4 uppercase text-white">ARQUIVOS<br/>OBSCUROS</h2>
-                        <button className="bg-neon-green text-black font-black py-3 px-8 rounded-full w-fit text-[11px] tracking-widest uppercase shadow-lg shadow-neon-green/20">Explorar</button>
-                    </div>
+                <div className="relative w-full aspect-[4/5] rounded-b-sm overflow-hidden group bg-neutral-900">
+                    {data.collections?.[0] ? (
+                      <>
+                        <img src={data.collections[0].image} 
+                             alt={data.collections[0].title} 
+                             className="w-full h-full object-cover transition-transform duration-700" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-background via-black/10 to-transparent flex flex-col justify-end p-8">
+                            <span className="text-white/60 text-[10px] font-bold uppercase tracking-[.4em] mb-2 font-['Inter']">{data.collections[0].subtitle || 'Lançamento'}</span>
+                            <h2 className="text-4xl font-black tracking-tighter leading-[0.8] mb-6 uppercase text-white">{data.collections[0].title}</h2>
+                            <button onClick={() => navigate(data.collections[0].link || '#')} className="bg-neon-green text-black font-black py-4 px-10 rounded-sm w-fit text-[11px] tracking-widest uppercase shadow-xl shadow-neon-green/30">Explorar</button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBdso03s2h1V8LfKMtiajCAAMOq8t0GfkW8B4cTVQeQO29ytbjJfXzkkYkfIOwWCOMCyN_PV81XZfRNn6deAxRSdOrSRh8P3ZvBFwd5phxoW3KWlygiW6vJGPAaO8j2S1IvWzuKpbwF-UGFHIyUXuU6xzn3lsa9pQxb03y0T7rXzXgFH4K00IYnefqSNR-SIYCJMbdGHoE-_DzEZcmITZZwHfzHQRwA-4qFB6KRIBMNNdZTdwXrkozGQke_Q_FOZdSfHWE5FaCosrgd" 
+                             alt="Hero Fallback" 
+                             className="w-full h-full object-cover transition-transform duration-700" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-background via-black/20 to-transparent flex flex-col justify-end p-8">
+                            <span className="text-white text-[10px] font-bold uppercase tracking-[.3em] mb-2 font-['Inter']">Coleção 2024</span>
+                            <h2 className="text-4xl font-black tracking-tighter leading-[0.8] mb-6 uppercase text-white">ARQUIVOS<br/>OBSCURIOS</h2>
+                            <button className="bg-neon-green text-black font-black py-4 px-10 rounded-sm w-fit text-[11px] tracking-widest uppercase shadow-xl shadow-neon-green/30">Explorar</button>
+                        </div>
+                      </>
+                    )}
                 </div>
             </section>
+
+            {/* Coleções - NOVO SEÇÃO */}
+            {(data.collections?.length > 1) && (
+              <section className="mb-14 px-4">
+                  <div className="flex items-baseline justify-between mb-5">
+                     <h3 className="text-[11px] font-bold uppercase tracking-[.3em] text-white/50 px-1 font-['Inter']">Explorar Coleções</h3>
+                  </div>
+                  <AutoCarousel speed={0.2} gap={12}>
+                      {data.collections.slice(1).map(col => (
+                          <div 
+                            key={col.id} 
+                            onClick={() => navigate(col.link || '#')}
+                            className="min-w-[280px] h-[200px] shrink-0 relative rounded-sm overflow-hidden bg-neutral-900 cursor-pointer group"
+                          >
+                              <img src={col.image} className="w-full h-full object-cover transition-transform group-active:scale-105" />
+                              <div className="absolute inset-0 bg-black/40 p-4 flex flex-col justify-end">
+                                  <p className="text-[9px] font-bold text-white/60 uppercase tracking-widest">{col.subtitle}</p>
+                                  <h4 className="text-xl font-black text-white uppercase tracking-tighter">{col.title}</h4>
+                              </div>
+                          </div>
+                      ))}
+                  </AutoCarousel>
+              </section>
+            )}
 
             {/* Categorias - carrossel com link */}
             <section className="mb-14 px-4">

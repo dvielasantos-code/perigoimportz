@@ -120,6 +120,7 @@ export default function AdminPage() {
 
   const [products,   setProducts]   = useState([]);
   const [categories, setCategories] = useState([]);
+  const [collections,setCollections] = useState([]);
   const [banners,    setBanners]    = useState([]);
   const [settings,   setSettings]   = useState({ whatsapp: '', address: '' });
 
@@ -132,6 +133,7 @@ export default function AdminPage() {
     name:'', price:'', promoPrice:'', category:'', brand:'', description:'', status:'ativo', featured:true, sizes:[],
   });
   const [newCat, setNewCat]         = useState({ name:'', icon:'tshirt', parentId:null });
+  const [newCollection, setNewCollection] = useState({ title:'', subtitle:'', link:'', status:'ativo' });
   const [newBanner, setNewBanner]   = useState({ title:'', link:'' });
   const [selectedCats, setSelectedCats] = useState(new Set());
 
@@ -227,9 +229,10 @@ export default function AdminPage() {
   }, []);
 
   const loadAll = async () => {
-    const [ps, cs, bs, ss] = await Promise.all([
+    const [ps, cs, cls, bs, ss] = await Promise.all([
       getDocs(collection(db, 'products')),
       getDocs(collection(db, 'categories')),
+      getDocs(collection(db, 'collections')),
       getDocs(collection(db, 'banners')),
       getDocs(collection(db, 'settings')),
     ]);
@@ -238,6 +241,7 @@ export default function AdminPage() {
     // Ordenar categorias por campo 'order'
     allCats.sort((a,b) => (a.order || 0) - (b.order || 0));
     setCategories(allCats);
+    setCollections(cls.docs.map(d => ({ id: d.id, ...d.data() })));
     setBanners(bs.docs.map(d => ({ id: d.id, ...d.data() })));
     ss.docs.forEach(d => { if (d.id === 'global') setSettings(d.data()); });
   };
@@ -453,6 +457,14 @@ export default function AdminPage() {
     setNewBanner({ title:'', link:'' }); setFile(null);
     await loadAll(); setLoading(false);
   };
+  
+  const addCollection = async e => {
+    e.preventDefault(); setLoading(true);
+    const url = file ? await uploadCloud(file) : '';
+    await addDoc(collection(db, 'collections'), { ...newCollection, image:url });
+    setNewCollection({ title:'', subtitle:'', link:'', status:'ativo' }); setFile(null);
+    await loadAll(); setLoading(false);
+  };
 
   const saveSettings = async e => {
     e.preventDefault(); setLoading(true);
@@ -525,6 +537,7 @@ export default function AdminPage() {
   };
   const tabs = [
     {id:'produtos',      label:'Produtos',      icon:'apparel'},
+    {id:'colecoes',      label:'Coleções',      icon:'auto_awesome_motion'},
     {id:'categorias',    label:'Categorias',    icon:'category'},
     {id:'banners',       label:'Banners',       icon:'photo_library'},
     {id:'configuracoes', label:'Config',        icon:'settings'},
@@ -874,6 +887,51 @@ export default function AdminPage() {
                     </form>
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ══ COLEÇÕES ══ */}
+        {activeTab==='colecoes' && (
+          <div className="grid grid-cols-2 gap-6">
+            <div className="p-6 rounded-2xl bg-[#111] border border-[#222]">
+              <h3 className="font-black uppercase tracking-tighter text-sm mb-5">Nova Coleção</h3>
+              <form onSubmit={addCollection} className="flex flex-col gap-4">
+                <input required placeholder="Título (ex: Arquivos Obscuros)" value={newCollection.title} onChange={e=>setNewCollection({...newCollection,title:e.target.value})} className={inp}/>
+                <input placeholder="Subtítulo (ex: Coleção 2024)" value={newCollection.subtitle} onChange={e=>setNewCollection({...newCollection,subtitle:e.target.value})} className={inp}/>
+                <input placeholder="Link (/categoria/marcas/nike)" value={newCollection.link} onChange={e=>setNewCollection({...newCollection,link:e.target.value})} className={inp}/>
+                <div className="relative p-8 rounded-xl flex flex-col items-center gap-2 cursor-pointer" style={{border:`2px dashed ${file?G:'#2a2a2a'}`,background:'#141414'}}>
+                  <span className="material-symbols-outlined text-2xl text-[#333]">photo</span>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-[#444]">Capa da Coleção (3:4 ou 16:9)</p>
+                  {file&&<p className="text-[10px] font-bold" style={{color:G}}>{file.name}</p>}
+                  <input type="file" accept="image/*" onChange={e=>setFile(e.target.files[0])} className="absolute inset-0 opacity-0 cursor-pointer"/>
+                </div>
+                <button type="submit" disabled={loading} className="py-3 rounded-xl text-black font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-opacity" style={{background:G}}>
+                  {loading?'Enviando...':'Adicionar Coleção'}
+                </button>
+              </form>
+            </div>
+            <div className="p-6 rounded-2xl bg-[#111] border border-[#222] max-h-[85vh] overflow-y-auto">
+              <h3 className="font-black uppercase tracking-tighter text-sm mb-5">Coleções Ativas ({collections.length})</h3>
+              <div className="flex flex-col gap-3">
+                {collections.map(c=>(
+                  <div key={c.id} className="rounded-xl overflow-hidden border border-[#222] group min-h-[120px]">
+                    <div className="h-32 overflow-hidden relative">
+                      {c.image&&<img src={c.image} className="w-full h-full object-cover"/>}
+                      <div className="absolute inset-0 bg-black/40 p-4 flex flex-col justify-end">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-[#ccc]">{c.subtitle}</p>
+                        <h4 className="text-lg font-black uppercase tracking-tighter leading-none">{c.title}</h4>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between p-3 border-t border-[#222]">
+                      <p className="text-[10px] font-medium text-[#555] truncate">{c.link}</p>
+                      <button onClick={()=>remove('collections',c.id)} className="shrink-0 ml-2 p-1.5 rounded-lg text-red-500 hover:bg-red-500 hover:text-white transition-all">
+                        <span className="material-symbols-outlined text-sm">delete</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
