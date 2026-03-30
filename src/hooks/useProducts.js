@@ -16,9 +16,7 @@ export function useProducts(category = null) {
 
     const unsub = onSnapshot(q, (snap) => {
       const prods = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      if (prods.length > 0) {
-        setProducts(prods);
-      }
+      setProducts(prods);
       setLoading(false);
     }, (err) => {
       console.error("Erro ao escutar Firestore:", err);

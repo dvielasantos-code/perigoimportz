@@ -11,53 +11,10 @@ export const data = {
     address: "RUA AUGUSTA, 123. JARDINS - SP.",
 
     // Categorias principais (carrossel + rotas)
-    categories: [
-        { id: "camisetas", name: "Camisetas", icon: "checkroom" },
-        { id: "calcas", name: "Calças", icon: "straighten" },
-        { id: "bones", name: "Bonés", icon: "school" },
-        { id: "tenis", name: "Tênis", icon: "sprint" },
-        { id: "acessorios", name: "Acessórios", icon: "diamond" }
-    ],
+    categories: [],
 
     // Menu com subcategorias expansíveis
-    menuCategories: [
-        {
-            id: "camisetas",
-            name: "Camisetas",
-            icon: "checkroom",
-            subcategories: [
-                { id: "camiseta", name: "Camisetas" },
-                { id: "regata", name: "Regatas" },
-                { id: "moletom-top", name: "Moletons" },
-                { id: "jaqueta", name: "Jaquetas" }
-            ]
-        },
-        {
-            id: "calcas",
-            name: "Calças",
-            icon: "straighten",
-            subcategories: [
-                { id: "calca", name: "Calças" },
-                { id: "shorts", name: "Shorts" },
-                { id: "moletom-bottom", name: "Moletom" }
-            ]
-        },
-        { id: "bones", name: "Bonés", icon: "school" },
-        { id: "tenis", name: "Tênis", icon: "sprint" },
-        { id: "acessorios", name: "Acessórios", icon: "diamond" },
-        {
-            id: "marcas",
-            name: "Marcas",
-            icon: "verified",
-            subcategories: [
-                { id: "nike", name: "Nike" },
-                { id: "adidas", name: "Adidas" },
-                { id: "supreme", name: "Supreme" },
-                { id: "stussy", name: "Stüssy" },
-                { id: "carhartt", name: "Carhartt" }
-            ]
-        }
-    ],
+    menuCategories: [],
 
     products: [
         // ===== CAMISETAS (3) =====
