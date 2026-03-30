@@ -248,26 +248,87 @@ export default function AdminPage() {
     loadAll();
   };
 
-  // ─── Compressão para WebP antes de subir ─────────────────────────────────
+  // ─── Compressão Inteligente: Quadrado 1:1 com padding de cor de fundo ───────
+  // Detecta a cor de fundo pelos cantos e preenche sem cortar nada
   const compressToWebP = (file, quality = 0.82) => new Promise((resolve) => {
     const img = new Image();
-    const url = URL.createObjectURL(file);
+    const objectUrl = URL.createObjectURL(file);
+
     img.onload = () => {
-      // Max 1280px no lado maior
-      let w = img.width, h = img.height;
-      const MAX = 1280;
-      if (w > MAX || h > MAX) {
-        if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
-        else       { w = Math.round(w * MAX / h); h = MAX; }
-      }
+      URL.revokeObjectURL(objectUrl);
+
+      const ow = img.width;
+      const oh = img.height;
+
+      // ── Passo 1: Detectar a cor de fundo pelos 4 cantos ──────────────────
+      // Pinta a imagem em um canvas temporário para ler os pixels
+      const tmpCanvas = document.createElement('canvas');
+      tmpCanvas.width = ow; tmpCanvas.height = oh;
+      const tmpCtx = tmpCanvas.getContext('2d');
+      tmpCtx.drawImage(img, 0, 0);
+
+      // Amostra os pixels das 4 esquinas (área 5x5 de cada canto)
+      const sampleCorner = (x, y) => {
+        try {
+          const d = tmpCtx.getImageData(x, y, 5, 5).data;
+          let r = 0, g = 0, b = 0, count = 0;
+          for (let i = 0; i < d.length; i += 4) {
+            // Ignora pixels totalmente transparentes
+            if (d[i + 3] > 10) { r += d[i]; g += d[i+1]; b += d[i+2]; count++; }
+          }
+          if (count === 0) return [245, 245, 245]; // fallback branco-off
+          return [Math.round(r/count), Math.round(g/count), Math.round(b/count)];
+        } catch { return [245, 245, 245]; }
+      };
+
+      const corners = [
+        sampleCorner(0, 0),
+        sampleCorner(Math.max(0, ow-5), 0),
+        sampleCorner(0, Math.max(0, oh-5)),
+        sampleCorner(Math.max(0, ow-5), Math.max(0, oh-5)),
+      ];
+
+      // Média das 4 esquinas = cor de fundo
+      const bg = corners.reduce(
+        (acc, c) => [acc[0]+c[0], acc[1]+c[1], acc[2]+c[2]],
+        [0, 0, 0]
+      ).map(v => Math.round(v / corners.length));
+
+      const bgColor = `rgb(${bg[0]},${bg[1]},${bg[2]})`;
+
+      // ── Passo 2: Criar canvas quadrado com tamanho máximo 1080px ─────────
+      const MAX = 1080;
+      const side = Math.min(MAX, Math.max(ow, oh));
       const canvas = document.createElement('canvas');
-      canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      URL.revokeObjectURL(url);
+      canvas.width = side; canvas.height = side;
+      const ctx = canvas.getContext('2d');
+
+      // Preenche fundo com a cor detectada
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(0, 0, side, side);
+
+      // ── Passo 3: Escalar a imagem para caber no quadrado (object-fit: contain) ──
+      const scale = Math.min(side / ow, side / oh);
+      const dw = Math.round(ow * scale);
+      const dh = Math.round(oh * scale);
+      const dx = Math.round((side - dw) / 2);
+      const dy = Math.round((side - dh) / 2);
+
+      ctx.drawImage(img, dx, dy, dw, dh);
+
+      // ── Passo 4: Exportar como WebP ──────────────────────────────────────
       canvas.toBlob(blob => resolve(blob), 'image/webp', quality);
     };
-    img.src = url;
+
+    img.onerror = () => {
+      // Fallback: se não conseguiu processar, sobe o arquivo original
+      URL.revokeObjectURL(objectUrl);
+      resolve(file);
+    };
+
+    img.src = objectUrl;
   });
+
 
   const uploadCloud = async f => {
     const webpBlob = await compressToWebP(f);
