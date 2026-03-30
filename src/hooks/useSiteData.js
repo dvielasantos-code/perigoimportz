@@ -26,9 +26,11 @@ export function useSiteData() {
         };
       });
       
+      const sortedAllCats = [...allCats].sort((a,b) => (a.order || 0) - (b.order || 0));
+
       setSiteData(prev => ({
         ...prev,
-        categories: parents, // Sobrescreve data.categories hardcoded
+        categories: sortedAllCats, // Sobrescreve data.categories hardcoded com TODAS as categorias ativas
         menuCategories: builtMenu
       }));
     });
