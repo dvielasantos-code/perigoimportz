@@ -129,7 +129,7 @@ export default function AdminPage() {
   const [popMsg,     setPopMsg]     = useState('');
 
   const [newProduct, setNewProduct] = useState({
-    name:'', price:'', promoPrice:'', category:'', brand:'', description:'', status:'ativo', featured:true,
+    name:'', price:'', promoPrice:'', category:'', brand:'', description:'', status:'ativo', featured:true, sizes:[],
   });
   const [newCat, setNewCat]         = useState({ name:'', icon:'tshirt', parentId:null });
   const [newBanner, setNewBanner]   = useState({ title:'', link:'' });
@@ -248,9 +248,31 @@ export default function AdminPage() {
     loadAll();
   };
 
+  // ─── Compressão para WebP antes de subir ─────────────────────────────────
+  const compressToWebP = (file, quality = 0.82) => new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      // Max 1280px no lado maior
+      let w = img.width, h = img.height;
+      const MAX = 1280;
+      if (w > MAX || h > MAX) {
+        if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+        else       { w = Math.round(w * MAX / h); h = MAX; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      canvas.toBlob(blob => resolve(blob), 'image/webp', quality);
+    };
+    img.src = url;
+  });
+
   const uploadCloud = async f => {
+    const webpBlob = await compressToWebP(f);
     const fd = new FormData();
-    fd.append('file', f);
+    fd.append('file', webpBlob, 'image.webp');
     fd.append('upload_preset', 'produtos_perigo');
     const r = await fetch('https://api.cloudinary.com/v1_1/djua9ijum/image/upload', { method:'POST', body:fd });
     const j = await r.json();
@@ -356,8 +378,9 @@ export default function AdminPage() {
       price:      Number(newProduct.price),
       promoPrice: newProduct.promoPrice ? Number(newProduct.promoPrice) : null,
       image: urls[0], images: urls,
+      sizes: newProduct.sizes || [],
     });
-    setNewProduct({ name:'', price:'', promoPrice:'', category:'', brand:'', description:'', status:'ativo', featured:true });
+    setNewProduct({ name:'', price:'', promoPrice:'', category:'', brand:'', description:'', status:'ativo', featured:true, sizes:[] });
     setFiles([]);
     await loadAll(); setLoading(false);
   };
@@ -430,7 +453,15 @@ export default function AdminPage() {
     </div>
   );
 
-  const inp = 'p-3 rounded-xl text-sm text-white outline-none w-full bg-[#1a1a1a] border border-[#2a2a2a] focus:border-green-500 transition-colors';
+  const inp = 'p-2.5 rounded-md text-sm text-white outline-none w-full bg-[#1a1a1a] border border-[#2a2a2a] focus:border-green-500 transition-colors';
+
+  // Tamanhos disponíveis
+  const SIZE_OPTIONS = ['PP','P','M','G','GG','XG','U'];
+  const toggleSize = (target, sz) => {
+    const cur = target.sizes || [];
+    const next = cur.includes(sz) ? cur.filter(s => s !== sz) : [...cur, sz];
+    return next;
+  };
   const tabs = [
     {id:'produtos',      label:'Produtos',      icon:'apparel'},
     {id:'categorias',    label:'Categorias',    icon:'category'},
@@ -441,7 +472,7 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen flex text-white bg-[#0a0a0a]">
 
-      {/* Sidebar */}
+      {/* Sidebar - cantos menos arredondados */}
       <aside className="w-52 shrink-0 flex flex-col bg-[#111] border-r border-[#1e1e1e]">
         <div className="p-5 flex items-center gap-3 border-b border-[#1e1e1e]">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{background:G}}>
@@ -455,14 +486,14 @@ export default function AdminPage() {
         <nav className="flex-1 p-3 flex flex-col gap-1">
           {tabs.map(t=>(
             <button key={t.id} onClick={()=>setActiveTab(t.id)}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider text-left transition-all"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-md text-[11px] font-black uppercase tracking-wider text-left transition-all"
               style={activeTab===t.id?{background:G,color:'#000'}:{color:'rgba(255,255,255,0.4)'}}>
               <span className="material-symbols-outlined text-base">{t.icon}</span>{t.label}
             </button>
           ))}
         </nav>
         <div className="p-3 border-t border-[#1e1e1e]">
-          <button onClick={()=>signOut(auth)} className="w-full py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-red-500 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all">
+          <button onClick={()=>signOut(auth)} className="w-full py-2.5 rounded-md text-[10px] font-black uppercase tracking-widest text-red-500 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all">
             Sair
           </button>
         </div>
@@ -487,12 +518,12 @@ export default function AdminPage() {
                   placeholder="Buscar por nome, marca, preço..."
                   value={prodSearch}
                   onChange={e=>setProdSearch(e.target.value)}
-                  className="pl-10 pr-4 py-2.5 rounded-xl text-sm text-white outline-none w-full bg-[#1a1a1a] border border-[#2a2a2a] focus:border-green-500 transition-colors"
+                  className="pl-10 pr-4 py-2.5 rounded-md text-sm text-white outline-none w-full bg-[#1a1a1a] border border-[#2a2a2a] focus:border-green-500 transition-colors"
                 />
               </div>
               {selectedProds.size > 0 && (
                 <button onClick={deleteSelectedProds} disabled={loading}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors">
+                  className="flex items-center gap-2 px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-md text-[10px] font-black uppercase tracking-widest transition-colors">
                   <span className="material-symbols-outlined text-sm">delete_sweep</span>
                   Excluir {selectedProds.size}
                 </button>
@@ -503,14 +534,14 @@ export default function AdminPage() {
             <div className="flex gap-2 flex-wrap">
               <button
                 onClick={()=>setProdCatFilter('__all__')}
-                className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all"
+                className="px-3 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all"
                 style={prodCatFilter==='__all__'?{background:G,color:'#000'}:{background:'#1a1a1a',color:'#888',border:'1px solid #2a2a2a'}}>
                 Todos ({products.length})
               </button>
               {categories.map(cat=>(
                 <button key={cat.id}
                   onClick={()=>setProdCatFilter(cat.id)}
-                  className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all"
+                  className="px-3 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all"
                   style={prodCatFilter===cat.id?{background:G,color:'#000'}:{background:'#1a1a1a',color:'#888',border:'1px solid #2a2a2a'}}>
                   {cat.name} ({products.filter(p=>p.category===cat.id).length})
                 </button>
@@ -519,11 +550,11 @@ export default function AdminPage() {
 
             {/* Grid de produtos */}
             <div className="grid grid-cols-5 gap-4">
-              {/* Lista */}
-              <div className="col-span-3 p-4 rounded-2xl bg-[#111] border border-[#222] max-h-[75vh] overflow-y-auto">
+              {/* Lista ─ 2 colunas */}
+              <div className="col-span-3 p-3 rounded-md bg-[#111] border border-[#1e1e1e] max-h-[75vh] overflow-y-auto">
                 {/* Header selecionar tudo */}
                 {filteredProds.length > 0 && (
-                  <div className="flex items-center gap-2 mb-3 px-1">
+                  <div className="flex items-center gap-2 mb-2 px-1">
                     <input type="checkbox"
                       checked={filteredProds.length > 0 && filteredProds.every(p => selectedProds.has(p.id))}
                       onChange={() => {
@@ -542,60 +573,69 @@ export default function AdminPage() {
                 )}
 
                 {filteredProds.length === 0 && (
-                  <div className="py-20 text-center">
+                  <div className="py-16 text-center">
                     <span className="material-symbols-outlined text-5xl text-[#2a2a2a]">inventory_2</span>
                     <p className="text-xs font-bold uppercase tracking-widest mt-3 text-[#333]">Nenhum produto encontrado</p>
                   </div>
                 )}
 
-                <div className="flex flex-col gap-1.5">
+                {/* Grid 2 colunas */}
+                <div className="grid grid-cols-2 gap-2">
                   {filteredProds.map(p=>(
                     <div key={p.id}
-                      className="flex items-center gap-3 p-2.5 rounded-xl border transition-all cursor-pointer group"
+                      className="flex flex-col rounded-md border transition-all overflow-hidden"
                       style={{
                         background: selectedProds.has(p.id) ? 'rgba(239,68,68,0.07)' : '#191919',
                         borderColor: selectedProds.has(p.id) ? '#ef4444' : '#242424'
                       }}>
-                      {/* Checkbox */}
-                      <input type="checkbox"
-                        checked={selectedProds.has(p.id)}
-                        onChange={()=>toggleSelectProd(p.id)}
-                        className="w-4 h-4 accent-red-500 shrink-0 cursor-pointer"
-                      />
 
-                      {/* Foto */}
-                      <div className="w-10 h-12 rounded-lg overflow-hidden shrink-0 bg-[#222]">
+                      {/* Foto top */}
+                      <div className="relative w-full aspect-[4/3] bg-[#111]">
                         {p.image && <img src={p.image} className="w-full h-full object-cover"/>}
-                      </div>
-
-                      {/* Info */}
-                      <div className="flex-1 min-w-0">
-                        <p className="font-black text-[11px] uppercase tracking-tight truncate text-white" style={{opacity:p.status==='ativo'?1:0.4}}>
-                          {p.name}
-                        </p>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          {p.promoPrice
-                            ? <><span style={{color:G}} className="font-black text-[10px]">R$ {Number(p.promoPrice).toFixed(0)}</span><span className="line-through text-[9px] text-[#444]">R$ {Number(p.price).toFixed(0)}</span></>
-                            : <span className="font-bold text-[10px] text-[#888]">R$ {Number(p.price).toFixed(0)}</span>}
-                          <span className="text-[9px] text-[#444] uppercase tracking-widest ml-1">{p.category}</span>
+                        {/* overlay ações */}
+                        <div className="absolute top-1.5 left-1.5">
+                          <input type="checkbox"
+                            checked={selectedProds.has(p.id)}
+                            onChange={()=>toggleSelectProd(p.id)}
+                            className="w-4 h-4 accent-red-500 cursor-pointer"
+                          />
                         </div>
+                        <div className="absolute top-1.5 right-1.5 flex flex-col gap-1">
+                          <label className="relative inline-flex items-center cursor-pointer" title={p.status==='ativo'?'Desativar':'Ativar'}>
+                            <input type="checkbox" className="sr-only peer" checked={p.status==='ativo'} onChange={()=>toggleProdActive(p)} />
+                            <div className="w-7 h-3.5 bg-[#333] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[1px] after:left-[1px] after:bg-white after:border after:rounded-full after:h-2.5 after:w-2.5 after:transition-all peer-checked:bg-green-500"></div>
+                          </label>
+                        </div>
+                        {p.status !== 'ativo' && (
+                          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                            <span className="text-[9px] font-black uppercase tracking-widest text-white/60">Inativo</span>
+                          </div>
+                        )}
                       </div>
 
-                      {/* Ações */}
-                      <div className="flex items-center gap-1 shrink-0">
-                        {/* Toggle ativo */}
-                        <label className="relative inline-flex items-center cursor-pointer" title={p.status==='ativo'?'Desativar':'Ativar'}>
-                          <input type="checkbox" className="sr-only peer" checked={p.status==='ativo'} onChange={()=>toggleProdActive(p)} />
-                          <div className="w-8 h-4 bg-[#333] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-green-500"></div>
-                        </label>
-                        {/* Editar */}
-                        <button onClick={()=>setEditingProd({...p})} className="p-1.5 rounded-lg text-[#555] hover:text-white hover:bg-[#333] transition-all">
-                          <span className="material-symbols-outlined text-sm">edit</span>
-                        </button>
-                        {/* Excluir */}
-                        <button onClick={()=>remove('products',p.id)} className="p-1.5 rounded-lg text-[#555] hover:text-red-500 hover:bg-red-500/10 transition-all">
-                          <span className="material-symbols-outlined text-sm">delete</span>
-                        </button>
+                      {/* Info bottom */}
+                      <div className="p-2">
+                        <p className="font-black text-[10px] uppercase tracking-tight truncate text-white">{p.name}</p>
+                        <div className="flex items-center justify-between mt-1">
+                          <div className="flex items-center gap-1">
+                            {p.promoPrice
+                              ? <><span style={{color:G}} className="font-black text-[10px]">R${Number(p.promoPrice).toFixed(0)}</span><span className="line-through text-[9px] text-[#444]">R${Number(p.price).toFixed(0)}</span></>
+                              : <span className="font-bold text-[10px] text-[#888]">R${Number(p.price).toFixed(0)}</span>}
+                          </div>
+                          <div className="flex gap-1">
+                            <button onClick={()=>setEditingProd({...p})} className="p-1 rounded text-[#555] hover:text-white hover:bg-[#333] transition-all">
+                              <span className="material-symbols-outlined text-xs">edit</span>
+                            </button>
+                            <button onClick={()=>remove('products',p.id)} className="p-1 rounded text-[#555] hover:text-red-500 hover:bg-red-500/10 transition-all">
+                              <span className="material-symbols-outlined text-xs">delete</span>
+                            </button>
+                          </div>
+                        </div>
+                        {p.sizes && p.sizes.length > 0 && (
+                          <div className="flex flex-wrap gap-0.5 mt-1">
+                            {p.sizes.map(s=><span key={s} className="text-[8px] font-black px-1.5 py-0.5 rounded" style={{background:'#2a2a2a',color:'#888'}}>{s}</span>)}
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -606,16 +646,16 @@ export default function AdminPage() {
               <div className="col-span-2">
                 {editingProd ? (
                   /* ── Modal de Edição ── */
-                  <div className="p-5 rounded-2xl bg-[#111] border border-green-500/30">
-                    <div className="flex items-center justify-between mb-4">
+                  <div className="p-4 rounded-md bg-[#111] border border-green-500/30 max-h-[75vh] overflow-y-auto">
+                    <div className="flex items-center justify-between mb-3">
                       <h3 className="font-black uppercase tracking-tighter text-sm" style={{color:G}}>Editando Produto</h3>
                       <button onClick={()=>setEditingProd(null)} className="text-[#555] hover:text-white">
                         <span className="material-symbols-outlined">close</span>
                       </button>
                     </div>
-                    <form onSubmit={updateProduct} className="flex flex-col gap-3">
+                    <form onSubmit={updateProduct} className="flex flex-col gap-2.5">
                       <input required placeholder="Nome" value={editingProd.name} onChange={e=>setEditingProd({...editingProd,name:e.target.value})} className={inp}/>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-2 gap-2">
                         <div>
                           <label className="text-[9px] font-black uppercase tracking-widest block mb-1" style={{color:G}}>Preço</label>
                           <input required type="number" step="0.01" value={editingProd.price} onChange={e=>setEditingProd({...editingProd,price:e.target.value})} className={inp}/>
@@ -636,25 +676,40 @@ export default function AdminPage() {
                       </select>
                       <input placeholder="Marca" value={editingProd.brand||''} onChange={e=>setEditingProd({...editingProd,brand:e.target.value})} className={inp}/>
                       <textarea rows={2} placeholder="Descrição" value={editingProd.description||''} onChange={e=>setEditingProd({...editingProd,description:e.target.value})} className={`${inp} resize-none`}/>
+                      {/* Tamanhos */}
+                      <div>
+                        <label className="text-[9px] font-black uppercase tracking-widest block mb-1" style={{color:G}}>Tamanhos</label>
+                        <div className="flex flex-wrap gap-1">
+                          {SIZE_OPTIONS.map(sz=>(
+                            <button key={sz} type="button"
+                              onClick={()=>setEditingProd({...editingProd,sizes:toggleSize(editingProd,sz)})}
+                              className="px-2.5 py-1 text-[10px] font-black uppercase tracking-widest rounded-sm transition-all"
+                              style={(editingProd.sizes||[]).includes(sz)?{background:G,color:'#000'}:{background:'#1e1e1e',color:'#555',border:'1px solid #2a2a2a'}}>
+                              {sz}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" checked={editingProd.featured} onChange={e=>setEditingProd({...editingProd,featured:e.target.checked})} className="w-4 h-4 accent-green-500"/>
                         <span className="text-[10px] font-black uppercase tracking-widest" style={{color:G}}>Destaque</span>
                       </label>
                       {/* Trocar foto */}
-                      <div className="relative p-3 rounded-xl flex items-center gap-3 cursor-pointer"
+                      <div className="relative p-3 rounded-md flex items-center gap-3 cursor-pointer"
                         style={{border:`1px dashed ${editingProd._newFile?G:'#2a2a2a'}`,background:'#141414'}}>
-                        {editingProd.image && <img src={editingProd.image} className="w-10 h-12 object-cover rounded-lg shrink-0"/>}
+                        {editingProd.image && <img src={editingProd.image} className="w-10 h-12 object-cover rounded shrink-0"/>}
                         <div>
                           <p className="text-[10px] font-black uppercase tracking-widest text-[#555]">Trocar foto</p>
                           {editingProd._newFile && <p className="text-[10px] font-bold mt-0.5" style={{color:G}}>{editingProd._newFile.name}</p>}
+                          {editingProd._newFile && <p className="text-[8px] text-[#555] mt-0.5">Será comprimida para WebP</p>}
                         </div>
                         <input type="file" accept="image/*" onChange={e=>setEditingProd({...editingProd,_newFile:e.target.files[0]})} className="absolute inset-0 opacity-0 cursor-pointer"/>
                       </div>
                       <div className="flex gap-2">
-                        <button type="submit" disabled={loading} className="flex-1 py-3 rounded-xl text-black font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-opacity" style={{background:G}}>
+                        <button type="submit" disabled={loading} className="flex-1 py-3 rounded-md text-black font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-opacity" style={{background:G}}>
                           {loading?'Salvando...':'Salvar'}
                         </button>
-                        <button type="button" onClick={()=>setEditingProd(null)} className="py-3 px-4 rounded-xl text-[#555] font-black text-[10px] uppercase tracking-widest border border-[#2a2a2a] hover:border-white transition-all">
+                        <button type="button" onClick={()=>setEditingProd(null)} className="py-3 px-4 rounded-md text-[#555] font-black text-[10px] uppercase tracking-widest border border-[#2a2a2a] hover:border-white transition-all">
                           Cancelar
                         </button>
                       </div>
@@ -662,11 +717,11 @@ export default function AdminPage() {
                   </div>
                 ) : (
                   /* ── Formulário: Adicionar Produto ── */
-                  <div className="p-5 rounded-2xl bg-[#111] border border-[#222]">
-                    <h3 className="font-black uppercase tracking-tighter text-sm mb-4">Adicionar Produto</h3>
-                    <form onSubmit={addProduct} className="flex flex-col gap-3">
+                  <div className="p-4 rounded-md bg-[#111] border border-[#1e1e1e] max-h-[75vh] overflow-y-auto">
+                    <h3 className="font-black uppercase tracking-tighter text-sm mb-3">Adicionar Produto</h3>
+                    <form onSubmit={addProduct} className="flex flex-col gap-2.5">
                       <input required placeholder="Nome do Produto" value={newProduct.name} onChange={e=>setNewProduct({...newProduct,name:e.target.value})} className={inp}/>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-2 gap-2">
                         <div>
                           <label className="text-[9px] font-black uppercase tracking-widest block mb-1" style={{color:G}}>Preço</label>
                           <input required type="number" step="0.01" placeholder="199.90" value={newProduct.price} onChange={e=>setNewProduct({...newProduct,price:e.target.value})} className={inp}/>
@@ -690,21 +745,78 @@ export default function AdminPage() {
                       </div>
                       <input placeholder="Marca" value={newProduct.brand} onChange={e=>setNewProduct({...newProduct,brand:e.target.value})} className={inp}/>
                       <textarea required rows={2} placeholder="Descrição..." value={newProduct.description} onChange={e=>setNewProduct({...newProduct,description:e.target.value})} className={`${inp} resize-none`}/>
+                      {/* Tamanhos */}
+                      <div>
+                        <label className="text-[9px] font-black uppercase tracking-widest block mb-1" style={{color:G}}>Tamanhos Disponíveis</label>
+                        <div className="flex flex-wrap gap-1">
+                          {SIZE_OPTIONS.map(sz=>(
+                            <button key={sz} type="button"
+                              onClick={()=>setNewProduct({...newProduct,sizes:toggleSize(newProduct,sz)})}
+                              className="px-2.5 py-1 text-[10px] font-black uppercase tracking-widest rounded-sm transition-all"
+                              style={(newProduct.sizes||[]).includes(sz)?{background:G,color:'#000'}:{background:'#1e1e1e',color:'#555',border:'1px solid #2a2a2a'}}>
+                              {sz}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" checked={newProduct.featured} onChange={e=>setNewProduct({...newProduct,featured:e.target.checked})} className="w-4 h-4 accent-green-500"/>
                         <span className="text-[10px] font-black uppercase tracking-widest" style={{color:G}}>Destaque</span>
                       </label>
-                      <div className="relative p-5 rounded-xl flex flex-col items-center gap-2 cursor-pointer transition-all"
-                        style={{border:`2px dashed ${files.length?G:'#2a2a2a'}`,background:'#141414'}}>
-                        <span className="material-symbols-outlined text-2xl text-[#333]">upload</span>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-[#444]">Até 7 fotos</p>
-                        {files.length>0&&<p className="text-[10px] font-bold" style={{color:G}}>{files.length} foto(s)</p>}
-                        <input type="file" multiple accept="image/*" onChange={e=>setFiles(Array.from(e.target.files).slice(0,7))} className="absolute inset-0 opacity-0 cursor-pointer"/>
+                      {/* Upload de fotos com preview e reordenação */}
+                      <div>
+                        <label className="text-[9px] font-black uppercase tracking-widest block mb-1" style={{color:G}}>Fotos (arraste para reordenar)</label>
+                        <div className="relative p-4 rounded-md flex flex-col items-center gap-2 cursor-pointer transition-all"
+                          style={{border:`2px dashed ${files.length?G:'#2a2a2a'}`,background:'#141414'}}>
+                          <span className="material-symbols-outlined text-2xl text-[#333]">upload</span>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-[#444]">Até 7 fotos · Auto WebP</p>
+                          <input type="file" multiple accept="image/*" onChange={e=>setFiles(Array.from(e.target.files).slice(0,7))} className="absolute inset-0 opacity-0 cursor-pointer"/>
+                        </div>
+                        {/* Preview com reordenação */}
+                        {files.length > 0 && (
+                          <div className="mt-2 grid grid-cols-4 gap-1.5">
+                            {files.map((f,i)=>(
+                              <div key={i} className="relative group">
+                                <img src={URL.createObjectURL(f)} className="w-full aspect-square object-cover rounded" />
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                                  {i > 0 && (
+                                    <button type="button"
+                                      onClick={()=>{
+                                        const next=[...files];
+                                        [next[i-1],next[i]]=[next[i],next[i-1]];
+                                        setFiles(next);
+                                      }}
+                                      className="p-0.5 bg-black/60 rounded text-white">
+                                      <span className="material-symbols-outlined text-xs">arrow_back</span>
+                                    </button>
+                                  )}
+                                  {i < files.length-1 && (
+                                    <button type="button"
+                                      onClick={()=>{
+                                        const next=[...files];
+                                        [next[i],next[i+1]]=[next[i+1],next[i]];
+                                        setFiles(next);
+                                      }}
+                                      className="p-0.5 bg-black/60 rounded text-white">
+                                      <span className="material-symbols-outlined text-xs">arrow_forward</span>
+                                    </button>
+                                  )}
+                                  <button type="button"
+                                    onClick={()=>setFiles(files.filter((_,fi)=>fi!==i))}
+                                    className="p-0.5 bg-red-500/80 rounded text-white">
+                                    <span className="material-symbols-outlined text-xs">close</span>
+                                  </button>
+                                </div>
+                                {i===0 && <span className="absolute bottom-1 left-1 text-[8px] font-black uppercase" style={{color:G}}>Principal</span>}
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                       <button type="submit" disabled={loading}
-                        className="py-4 rounded-xl text-black font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 mt-1 hover:opacity-90 transition-opacity"
+                        className="py-3 rounded-md text-black font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 mt-1 hover:opacity-90 transition-opacity"
                         style={{background:loading?'#333':G,color:'#000'}}>
-                        {loading?<><span className="animate-spin h-4 w-4 border-2 border-black border-t-transparent rounded-full"/>Enviando...</>:'Publicar no Catálogo'}
+                        {loading?<><span className="animate-spin h-4 w-4 border-2 border-black border-t-transparent rounded-full"/>Comprimindo e enviando...</>:'Publicar no Catálogo'}
                       </button>
                     </form>
                   </div>
