@@ -90,7 +90,7 @@ export default function ProductPage() {
           <div className="md:w-[52%] md:pr-12">
 
             {/* Imagem principal — sempre quadrada 1:1 */}
-            <div className="w-full aspect-square overflow-hidden bg-[#111] relative" style={{borderRadius:4}}>
+            <div className="w-full aspect-square overflow-hidden bg-[#111] relative" style={{borderRadius:8}}>
               <img
                 key={mainImage}
                 src={mainImage || product.image}
@@ -98,7 +98,7 @@ export default function ProductPage() {
                 className="w-full h-full object-cover transition-opacity duration-500"
               />
               {discount && (
-                <div className="absolute top-4 right-4 bg-white text-black text-[9px] font-black uppercase tracking-widest px-2.5 py-1">
+                <div className="absolute top-4 right-4 bg-neon-green text-black text-[10px] font-black uppercase tracking-widest px-3 py-1.5 shadow-lg shadow-neon-green/20">
                   -{discount}%
                 </div>
               )}

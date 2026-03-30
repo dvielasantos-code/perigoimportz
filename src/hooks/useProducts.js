@@ -4,7 +4,7 @@ import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { data as staticData } from '../data';
 
 export function useProducts(category = null) {
-  const [products, setProducts] = useState([]); // Aguarda Firestore para evitar flash de dados estáticos
+  const [products, setProducts] = useState(staticData.products); // Inicia rapido
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

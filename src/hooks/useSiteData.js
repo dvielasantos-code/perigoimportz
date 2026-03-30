@@ -54,7 +54,7 @@ export function useSiteData() {
       }));
     });
 
-    // Escuta Configs de Whatsapp e Endereço:
+    // Escuta Configs de Whatsapp e Endeço:
     getDoc(doc(db, "settings", "global")).then((snap) => {
       if(snap.exists()) {
         const d = snap.data();
@@ -63,18 +63,10 @@ export function useSiteData() {
       setLoading(false);
     });
 
-    // Escuta Layout da Home
-    const unsubLayout = onSnapshot(collection(db, "home_layout"), (snap) => {
-      const layout = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      layout.sort((a,b) => (a.order || 0) - (b.order || 0));
-      setSiteData(prev => ({ ...prev, home_layout: layout }));
-    });
-
     return () => {
       unsubCats();
       unsubBanners();
       unsubBrands();
-      unsubLayout();
     };
   }, []);
 

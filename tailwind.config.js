@@ -53,14 +53,16 @@ export default {
         "primary-container": "#d4d4d4",
         "on-tertiary-fixed": "#ffffff",
         "secondary-container": "#474746",
-        "secondary": "#c8c6c5"
+        "secondary": "#c8c6c5",
+        "neon-green": "#22c55e",
+        "secondary-green": "#16a34a"
       },
       fontFamily: {
         "headline": ["Manrope", "sans-serif"],
         "body": ["Manrope", "sans-serif"],
         "label": ["Inter", "sans-serif"]
       },
-      borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"}
+      borderRadius: {"DEFAULT": "0.3rem", "lg": "0.6rem", "xl": "1rem", "full": "9999px"}
     },
   },
   plugins: [],

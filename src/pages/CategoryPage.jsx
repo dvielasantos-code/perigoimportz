@@ -115,11 +115,11 @@ export default function CategoryPage() {
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
               {products.map(p => (
                 <div key={p.id || p._id} className="group cursor-pointer" onClick={() => navigate(`/produto/${p.id || p._id}`)}>
-                  <div className="relative aspect-square overflow-hidden rounded-md md:rounded-md bg-surface-container-low mb-3 md:mb-5 transition-transform duration-500 hover:scale-[1.02]">
+                  <div className="relative aspect-square overflow-hidden rounded-xl md:rounded-2xl bg-surface-container-low mb-3 md:mb-5 transition-transform duration-500 hover:scale-[1.02]">
                     <img src={p.image} alt={p.name} className="w-full h-full object-cover transition-all duration-700" />
                     {p.featured && (
                       <div className="absolute top-3 left-3 md:top-5 md:left-5">
-                        <span className="bg-[#22c55e] text-black px-3 py-1 rounded-sm text-[10px] md:text-[11px] font-bold uppercase tracking-widest">Destaque</span>
+                        <span className="bg-neon-green text-black px-3 py-1 rounded-full text-[10px] md:text-[11px] font-bold uppercase tracking-widest shadow-lg shadow-neon-green/20">Destaque</span>
                       </div>
                     )}
                     {p.brand && (
@@ -130,7 +130,6 @@ export default function CategoryPage() {
                   </div>
                   <div className="flex flex-col gap-1 px-1">
                     <h3 className="font-extrabold text-sm md:text-lg tracking-tighter uppercase text-white leading-tight">{p.name}</h3>
-
                     <div className="flex items-center gap-2 mt-1">
                       {p.promoPrice ? (
                         <>
@@ -150,7 +149,7 @@ export default function CategoryPage() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-[#0e0e0e] w-full rounded-t-[3rem] mt-20 flex flex-col items-center px-10 py-16 text-center">
+      <footer className="bg-[#0e0e0e] w-full rounded-t-xl mt-20 flex flex-col items-center px-10 py-16 text-center">
         <h2 className="font-black text-xl text-white mb-4 tracking-tighter">PERIGOIMPORTZ</h2>
         <p className="text-sm text-white/40 leading-relaxed font-medium">{data.address}</p>
       </footer>
