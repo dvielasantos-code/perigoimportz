@@ -14,45 +14,26 @@ import {
 
 
 
-// Ícones disponíveis no seletor — emoji reais
 const ICONS = [
-  { id: '👕', label: 'Camiseta'  },
-  { id: '🎽', label: 'Regata'    },
-  { id: '🧥', label: 'Moletom'   },
-  { id: '👖', label: 'Calça'     },
-  { id: '🩳', label: 'Bermuda'   },
-  { id: '👟', label: 'Tênis'     },
-  { id: '🧢', label: 'Boné'      },
-  { id: '📿', label: 'Colar'     },
-  { id: '💎', label: 'Acess.'    },
-  { id: '🕶️', label: 'Óculos'    },
-  { id: '🧦', label: 'Meias'     },
-  { id: '👔', label: 'Camisa'    },
-  { id: '👗', label: 'Vestido'   },
-  { id: '👜', label: 'Bolsa'     },
-  { id: '⌚', label: 'Relógio'   },
-  { id: '🪡', label: 'Cinto'     },
+  { id: 'checkroom', label: 'Camiseta'  },
+  { id: 'apparel', label: 'Peça'    },
+  { id: 'straighten', label: 'Calça'     },
+  { id: 'sprint', label: 'Tênis'     },
+  { id: 'school', label: 'Boné'      },
+  { id: 'diamond', label: 'Acess.'    },
+  { id: 'watch', label: 'Relógio'   },
+  { id: 'eyeglasses', label: 'Óculos'    },
+  { id: 'shopping_bag', label: 'Bolsa'     },
+  { id: 'styler', label: 'Camisa'    },
+  { id: 'dry_cleaning', label: 'Regata'    },
+  { id: 'laundry', label: 'Bermuda'   },
+  { id: 'category', label: 'Diversos'     },
 ];
 
 const G = '#22c55e';
 
-// Fallback: categorias antigas no Firestore ainda têm nomes de Material Symbols
-const ICON_MAP = {
-  apparel:      '👕',
-  dry_cleaning: '🎽',
-  checkroom:    '🧥',
-  laundry:      '👖',
-  steps:        '👟',
-  hat:          '🧢',
-  diamond:      '💎',
-  watch:        '⌚',
-  eyeglasses:   '🕶️',
-  shopping_bag: '👜',
-  styler:       '👔',
-  sports:       '🏃',
-  category:     '📦',
-};
-const ri = icon => ICON_MAP[icon] || icon || '📦';
+// Funcao de renderizar icone, fallback para pacote
+const ri = icon => <span className="material-symbols-outlined">{icon || 'category'}</span>;
 
 // ─── Componentes de Categoria Draggável ──────────────────────────────────────
 function CategoryRow({ cat, onToggle, onRemove, isChild, children = [], isDraggingParent, isSelected, onSelect, selectedCats }) {
@@ -136,7 +117,7 @@ function DragGhost({ cat }) {
   return (
     <div className="flex items-center gap-3 px-5 py-3 rounded-2xl shadow-2xl scale-105"
       style={{ background: '#22c55e', color: '#000', border: '1px solid #22c55e' }}>
-      <span className="text-2xl leading-none">{ri(cat.icon)}</span>
+      <span className="text-2xl leading-none flex items-center justify-center">{ri(cat.icon)}</span>
       <span className="text-xs font-black uppercase tracking-wide">{cat.name}</span>
     </div>
   );
@@ -164,7 +145,7 @@ export default function AdminPage() {
   const [newProduct, setNewProduct] = useState({
     name:'', price:'', promoPrice:'', category:'', brand:'', description:'', status:'ativo', featured:true,
   });
-  const [newCat, setNewCat]         = useState({ name:'', icon:'👕', parentId:null });
+  const [newCat, setNewCat]         = useState({ name:'', icon:'checkroom', parentId:null });
   const [newBanner, setNewBanner]   = useState({ title:'', link:'' });
   const [selectedCats, setSelectedCats] = useState(new Set());
 
@@ -552,9 +533,9 @@ export default function AdminPage() {
                     {ICONS.map(ic=>(
                       <button key={ic.id} type="button" title={ic.label}
                         onClick={()=>setNewCat({...newCat,icon:ic.id})}
-                        className="w-8 h-8 flex items-center justify-center rounded-lg text-lg transition-all"
-                        style={newCat.icon===ic.id?{background:G,transform:'scale(1.15)'}:{background:'#252525'}}>
-                        {ic.id}
+                        className="w-8 h-8 flex items-center justify-center rounded-lg text-lg transition-all text-white"
+                        style={newCat.icon===ic.id?{background:'#22c55e',color:'#000',transform:'scale(1.15)'}:{background:'#252525'}}>
+                        <span className="material-symbols-outlined text-[18px]">{ic.id}</span>
                       </button>
                     ))}
                   </div>

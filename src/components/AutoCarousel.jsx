@@ -8,13 +8,14 @@ export default function AutoCarousel({ children, speed = 0.5, gap = 16 }) {
   const pausedRef = useRef(false);
   const setWidthRef = useRef(0);
 
-  // Renderizar filhos 3x em React (assim os handlers de click funcionam em todos)
+  // Renderizar multiplicar items apenas se for necessário para preencher scroll (ex: > 4 itens)
   const childArray = Children.toArray(children);
-  const tripled = [...childArray, ...childArray, ...childArray];
+  const shouldTriple = childArray.length > 4;
+  const renderItems = shouldTriple ? [...childArray, ...childArray, ...childArray] : childArray;
 
   useEffect(() => {
     const inner = innerRef.current;
-    if (!inner || childArray.length === 0) return;
+    if (!inner || childArray.length === 0 || !shouldTriple) return;
 
     // Calcular largura de 1 set (original)
     const itemCount = childArray.length;
@@ -40,7 +41,7 @@ export default function AutoCarousel({ children, speed = 0.5, gap = 16 }) {
     animRef.current = requestAnimationFrame(animate);
 
     return () => cancelAnimationFrame(animRef.current);
-  }, [speed, gap, childArray.length]);
+  }, [speed, gap, childArray.length, shouldTriple]);
 
   const pause = () => { pausedRef.current = true; };
   const resume = () => { pausedRef.current = false; };
@@ -59,7 +60,7 @@ export default function AutoCarousel({ children, speed = 0.5, gap = 16 }) {
         className="flex will-change-transform"
         style={{ gap: `${gap}px` }}
       >
-        {tripled}
+        {renderItems}
       </div>
     </div>
   );
