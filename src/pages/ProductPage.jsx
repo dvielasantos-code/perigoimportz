@@ -14,88 +14,109 @@ export default function ProductPage() {
   const [selectedSize, setSelectedSize] = useState(null);
   const [mainImage, setMainImage] = useState(null);
 
+  const product = allProducts.find(p => String(p.id || p._id) === productId);
+
   useEffect(() => {
     if (product) setMainImage(product.image);
     setSelectedSize(null);
-  }, [productId]);
-
-  const product = allProducts.find(p => String(p.id || p._id) === productId);
+  }, [productId, product?.id]);
 
   if (!product) {
     return (
-      <div className="bg-background text-white min-h-screen flex flex-col items-center justify-center">
-        <span className="material-symbols-outlined text-6xl text-white/20 mb-4">error</span>
-        <p className="text-white/50 text-lg mb-6">Produto não encontrado</p>
-        <button onClick={() => navigate('/')} className="px-6 py-3 bg-white text-black rounded-full font-bold text-sm uppercase tracking-wider">Voltar</button>
+      <div style={{background:'#080808'}} className="text-white min-h-screen flex flex-col items-center justify-center">
+        <p className="text-white/30 text-sm uppercase tracking-widest mb-6">Produto não encontrado</p>
+        <button onClick={() => navigate('/')} className="px-6 py-3 border border-white/10 text-white text-xs font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all">
+          ← Voltar
+        </button>
       </div>
     );
   }
 
-  const sizes = ['P', 'M', 'G', 'GG', 'XG'];
-  const categoryInfo = data.menuCategories.find(c => c.id === product.category) || 
-                       data.menuCategories.flatMap(c => c.subcategories || []).find(sc => sc.id === product.category);
+  const productSizes = product.sizes && product.sizes.length > 0 ? product.sizes : null;
 
-  // Produtos relacionados (mesma categoria, excluindo o atual)
-  const related = allProducts.filter(p => p.category === product.category && (p.id || p._id) !== (product.id || product._id) && p.status === 'ativo').slice(0, 4);
+  const categoryInfo = data.menuCategories.find(c => c.id === product.category) ||
+    data.menuCategories.flatMap(c => c.subcategories || []).find(sc => sc.id === product.category);
+
+  const related = allProducts
+    .filter(p => p.category === product.category && (p.id || p._id) !== (product.id || product._id) && p.status === 'ativo')
+    .slice(0, 4);
+
+  const displayPrice  = product.promoPrice || product.price;
+  const originalPrice = product.promoPrice ? product.price : null;
+  const discount      = originalPrice ? Math.round((1 - displayPrice / originalPrice) * 100) : null;
 
   const whatsappMsg = encodeURIComponent(
-    `Olá! Tenho interesse no produto: *${product.name}*\nPreço: R$ ${product.price.toFixed(2)}${selectedSize ? `\nTamanho: ${selectedSize}` : ''}\n\nPoderia me ajudar?`
+    `Olá! Tenho interesse no produto: *${product.name}*\nPreço: R$ ${displayPrice.toFixed(2)}${selectedSize ? `\nTamanho: ${selectedSize}` : ''}\n\nPoderia me ajudar?`
   );
 
+  const gallery = product.images && product.images.length > 1 ? product.images : [product.image];
+
   return (
-    <div className="bg-background text-on-background min-h-screen font-body antialiased">
+    <div style={{background:'#080808',minHeight:'100vh'}} className="text-white font-body antialiased">
       <SideMenu isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
 
-      {/* Header */}
-      <header className="fixed top-0 w-full z-50 bg-[#000000]/90 backdrop-blur-md flex justify-between items-center px-6 md:px-8 py-5 md:py-6">
-        <div className="flex items-center gap-3 md:gap-4 cursor-pointer" onClick={() => setMenuOpen(true)}>
-          <span className="material-symbols-outlined text-white text-2xl">menu</span>
-          <h1 className="text-xl md:text-2xl font-black tracking-tighter text-white uppercase">PERIGOIMPORTZ</h1>
+      {/* ── Header ── */}
+      <header className="fixed top-0 w-full z-50 flex justify-between items-center px-5 md:px-10 py-4"
+        style={{background:'rgba(8,8,8,0.92)',backdropFilter:'blur(16px)',borderBottom:'1px solid rgba(255,255,255,0.04)'}}>
+        <div className="flex items-center gap-3 cursor-pointer" onClick={() => setMenuOpen(true)}>
+          <span className="material-symbols-outlined text-white text-xl">menu</span>
+          <span className="text-sm md:text-base font-black tracking-tighter text-white uppercase select-none">PERIGOIMPORTZ</span>
         </div>
+        <button onClick={() => navigate(-1)} className="text-xs font-bold uppercase tracking-widest text-white/30 hover:text-white transition-colors flex items-center gap-2">
+          <span className="material-symbols-outlined text-base">arrow_back</span>
+          Voltar
+        </button>
       </header>
 
-      <main className="pt-[68px] md:pt-[88px]">
-        {/* Breadcrumb */}
-        <div className="px-6 md:px-8 pt-6 mb-4">
-          <div className="flex items-center gap-2 text-sm">
-            <button onClick={() => navigate('/')} className="text-white/40 hover:text-white transition-colors flex items-center gap-1">
-              <span className="material-symbols-outlined text-lg">arrow_back</span>
-              Início
+      <main className="pt-16 md:pt-20">
+
+        {/* ── Breadcrumb ── */}
+        <div className="px-5 md:px-10 pt-6 pb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.2em] text-white/20">
+          <button onClick={() => navigate('/')} className="hover:text-white/50 transition-colors">Início</button>
+          {categoryInfo && <>
+            <span>/</span>
+            <button onClick={() => navigate(`/categoria/${product.category}`)} className="hover:text-white/50 transition-colors">
+              {categoryInfo.name}
             </button>
-            {categoryInfo && (
-              <>
-                <span className="text-white/20">/</span>
-                <button onClick={() => navigate(`/categoria/${product.category}`)} className="text-white/40 hover:text-white transition-colors">
-                  {categoryInfo.name}
-                </button>
-              </>
-            )}
-            <span className="text-white/20">/</span>
-            <span className="text-white/60 truncate max-w-[200px]">{product.name}</span>
-          </div>
+          </>}
+          <span>/</span>
+          <span className="text-white/40 truncate max-w-[160px]">{product.name}</span>
         </div>
 
-        {/* Product Layout */}
-        <div className="flex flex-col md:flex-row gap-8 md:gap-16 px-6 md:px-8">
-          {/* Imagem */}
-          <div className="md:w-1/2 lg:w-[55%]">
-            <div className="relative aspect-[3/4] md:aspect-[4/5] rounded-2xl md:rounded-3xl overflow-hidden bg-surface-container-low mb-4">
-              <img src={mainImage || product.image} alt={product.name} className="w-full h-full object-cover transition-all duration-700" />
-              {product.promoPrice && (
-                <div className="absolute top-4 left-4 md:top-6 md:left-6">
-                  <span className="bg-red-600 text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg animate-pulse">Oferta</span>
+        {/* ── Layout principal ── */}
+        <div className="flex flex-col md:flex-row md:gap-0 px-5 md:px-10 mt-4 md:mt-8">
+
+          {/* ── Coluna: Galeria ── */}
+          <div className="md:w-[52%] md:pr-12">
+
+            {/* Imagem principal — sempre quadrada 1:1 */}
+            <div className="w-full aspect-square overflow-hidden bg-[#111] relative" style={{borderRadius:4}}>
+              <img
+                key={mainImage}
+                src={mainImage || product.image}
+                alt={product.name}
+                className="w-full h-full object-cover transition-opacity duration-500"
+              />
+              {discount && (
+                <div className="absolute top-4 right-4 bg-white text-black text-[9px] font-black uppercase tracking-widest px-2.5 py-1">
+                  -{discount}%
                 </div>
               )}
             </div>
-            
-            {/* Gallery */}
-            {product.images && product.images.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
-                {product.images.map((img, idx) => (
-                  <button 
-                    key={idx} 
+
+            {/* Thumbnails da galeria — sempre quadrados */}
+            {gallery.length > 1 && (
+              <div className="flex gap-2 mt-2 overflow-x-auto pb-1">
+                {gallery.map((img, idx) => (
+                  <button
+                    key={idx}
                     onClick={() => setMainImage(img)}
-                    className={`shrink-0 w-20 h-24 rounded-lg overflow-hidden border-2 transition-all ${mainImage === img ? 'border-white scale-105' : 'border-transparent opacity-50 hover:opacity-100'}`}
+                    className="shrink-0 w-16 h-16 overflow-hidden transition-all"
+                    style={{
+                      borderRadius: 2,
+                      outline: mainImage === img ? '2px solid #fff' : '2px solid transparent',
+                      opacity: mainImage === img ? 1 : 0.45,
+                    }}
                   >
                     <img src={img} className="w-full h-full object-cover" />
                   </button>
@@ -104,122 +125,146 @@ export default function ProductPage() {
             )}
           </div>
 
-          {/* Info */}
-          <div className="md:w-1/2 lg:w-[45%] flex flex-col justify-center py-4">
-            {/* Marca + Categoria */}
-            <div className="flex items-center gap-3 mb-4">
-              {product.brand && (
-                <span className="text-white/40 text-[11px] font-bold uppercase tracking-[.2em]">{product.brand}</span>
-              )}
-              {product.brand && categoryInfo && <span className="text-white/15">•</span>}
-              {categoryInfo && (
-                <span className="text-white/40 text-[11px] font-bold uppercase tracking-[.2em]">{categoryInfo.name}</span>
-              )}
-            </div>
+          {/* ── Coluna: Info ── */}
+          <div className="md:w-[48%] flex flex-col justify-start pt-8 md:pt-0">
+
+            {/* Marca */}
+            {product.brand && (
+              <p className="text-[10px] font-black uppercase tracking-[.25em] text-white/30 mb-3">
+                {product.brand}{categoryInfo && <span className="text-white/15"> · {categoryInfo.name}</span>}
+              </p>
+            )}
 
             {/* Nome */}
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tighter uppercase text-white leading-[0.95] mb-6">
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-black tracking-tighter uppercase text-white leading-none mb-6">
               {product.name}
             </h1>
 
-            {/* Preço */}
-            <div className="mb-8">
-              {product.promoPrice ? (
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-baseline gap-4">
-                    <span className="text-3xl md:text-5xl font-black text-red-500">R$ {product.promoPrice.toFixed(2)}</span>
-                    <span className="text-lg md:text-xl font-bold text-white/30 line-through">R$ {product.price.toFixed(2)}</span>
-                  </div>
-                  <p className="text-white/30 text-xs font-medium">ou 3x de R$ {(product.promoPrice / 3).toFixed(2)} sem juros</p>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-1">
-                  <span className="text-3xl md:text-5xl font-black text-white">R$ {product.price.toFixed(2)}</span>
-                  <p className="text-white/30 text-xs font-medium">ou 3x de R$ {(product.price / 3).toFixed(2)} sem juros</p>
-                </div>
-              )}
+            {/* Preço — clean, sem red gigante */}
+            <div className="mb-6 pb-6" style={{borderBottom:'1px solid rgba(255,255,255,0.06)'}}>
+              <div className="flex items-baseline gap-3">
+                <span className="text-2xl md:text-3xl font-black text-white">
+                  R$ {displayPrice.toFixed(2)}
+                </span>
+                {originalPrice && (
+                  <span className="text-sm font-medium text-white/25 line-through">
+                    R$ {originalPrice.toFixed(2)}
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-white/20 font-medium mt-1">
+                ou 3× de R$ {(displayPrice / 3).toFixed(2)} sem juros
+              </p>
             </div>
 
             {/* Descrição */}
-            <p className="text-white/50 text-sm md:text-base leading-relaxed mb-8 font-medium">{product.description}</p>
+            {product.description && (
+              <p className="text-white/40 text-sm leading-relaxed mb-6 font-medium">
+                {product.description}
+              </p>
+            )}
 
-            {/* Tamanhos */}
-            <div className="mb-8">
-              <p className="text-white/40 text-[11px] font-bold uppercase tracking-[.2em] mb-4">Tamanho</p>
-              <div className="flex gap-2 flex-wrap">
-                {sizes.map(size => (
-                  <button
-                    key={size}
-                    onClick={() => setSelectedSize(size)}
-                    className={`w-12 h-12 rounded-xl font-bold text-sm transition-all duration-200 ${
-                      selectedSize === size 
-                        ? 'bg-white text-black scale-105' 
-                        : 'bg-white/5 text-white/70 border border-white/10 hover:bg-white/10 hover:text-white'
-                    }`}
-                  >
-                    {size}
-                  </button>
-                ))}
+            {/* Tamanhos — só mostra se tiver no produto */}
+            {productSizes && (
+              <div className="mb-8">
+                <p className="text-[10px] font-black uppercase tracking-[.2em] text-white/25 mb-3">Tamanho</p>
+                <div className="flex gap-2 flex-wrap">
+                  {productSizes.map(size => (
+                    <button
+                      key={size}
+                      onClick={() => setSelectedSize(selectedSize === size ? null : size)}
+                      className="transition-all duration-150 text-xs font-black uppercase"
+                      style={{
+                        width: 44, height: 44,
+                        borderRadius: 2,
+                        background: selectedSize === size ? '#fff' : 'transparent',
+                        color: selectedSize === size ? '#000' : 'rgba(255,255,255,0.45)',
+                        border: selectedSize === size ? '2px solid #fff' : '1px solid rgba(255,255,255,0.12)',
+                      }}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* Botão WhatsApp de compra */}
+            {/* CTA WhatsApp */}
             <a
               href={`https://wa.me/${data.whatsapp}?text=${whatsappMsg}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white font-black py-5 px-8 rounded-2xl flex items-center justify-center gap-3 text-sm uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-[0.98] mb-4"
+              className="flex items-center justify-center gap-3 font-black text-xs uppercase tracking-widest transition-all hover:opacity-90 active:scale-[0.98]"
+              style={{
+                background:'#25D366',
+                color:'#000',
+                padding:'18px 24px',
+                borderRadius:3,
+                marginBottom:12,
+              }}
             >
-              <svg viewBox="0 0 32 32" width="20" height="20" fill="currentColor">
+              <svg viewBox="0 0 32 32" width="18" height="18" fill="currentColor">
                 <path d="M16.004 3.2C8.924 3.2 3.2 8.924 3.2 16.004c0 2.264.592 4.472 1.716 6.424L3.2 28.8l6.56-1.72A12.76 12.76 0 0016.004 28.8c7.08 0 12.796-5.724 12.796-12.796S23.084 3.2 16.004 3.2z"/>
               </svg>
               Comprar via WhatsApp
             </a>
 
-            {/* Info extras */}
-            <div className="grid grid-cols-2 gap-3 mt-6">
-              <div className="bg-white/5 rounded-xl p-4 flex items-center gap-3">
-                <span className="material-symbols-outlined text-white/40 text-xl">local_shipping</span>
+            {/* Info extras — clean */}
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              <div className="flex items-center gap-2 p-3" style={{background:'rgba(255,255,255,0.03)',borderRadius:3}}>
+                <span className="material-symbols-outlined text-white/20 text-base">local_shipping</span>
                 <div>
-                  <p className="text-white/80 text-xs font-bold">Frete Grátis</p>
-                  <p className="text-white/30 text-[10px]">Acima de R$ 299</p>
+                  <p className="text-white/60 text-[11px] font-bold">Frete Grátis</p>
+                  <p className="text-white/20 text-[10px]">Acima de R$ 299</p>
                 </div>
               </div>
-              <div className="bg-white/5 rounded-xl p-4 flex items-center gap-3">
-                <span className="material-symbols-outlined text-white/40 text-xl">verified</span>
+              <div className="flex items-center gap-2 p-3" style={{background:'rgba(255,255,255,0.03)',borderRadius:3}}>
+                <span className="material-symbols-outlined text-white/20 text-base">verified</span>
                 <div>
-                  <p className="text-white/80 text-xs font-bold">Original</p>
-                  <p className="text-white/30 text-[10px]">100% Autêntico</p>
+                  <p className="text-white/60 text-[11px] font-bold">Original</p>
+                  <p className="text-white/20 text-[10px]">100% Autêntico</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Produtos Relacionados */}
+        {/* ── Relacionados ── */}
         {related.length > 0 && (
-          <section className="px-6 md:px-8 mt-20 mb-12">
-            <h3 className="text-2xl md:text-3xl font-black tracking-tighter uppercase text-white mb-8">Relacionados</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+          <section className="px-5 md:px-10 mt-20 mb-16">
+            <p className="text-[10px] font-black uppercase tracking-[.2em] text-white/20 mb-6">Veja também</p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
               {related.map(p => (
-                <div key={p.id || p._id} className="group cursor-pointer" onClick={() => navigate(`/produto/${p.id || p._id}`)}>
-                  <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-surface-container-low mb-3 transition-transform duration-500 hover:scale-[1.02]">
-                    <img src={p.image} alt={p.name} className="w-full h-full object-cover transition-all duration-700" />
+                <div
+                  key={p.id || p._id}
+                  className="group cursor-pointer"
+                  onClick={() => navigate(`/produto/${p.id || p._id}`)}
+                >
+                  {/* Sempre quadrado nos relacionados */}
+                  <div className="w-full aspect-square overflow-hidden mb-2" style={{background:'#111',borderRadius:3}}>
+                    <img
+                      src={p.image}
+                      alt={p.name}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
                   </div>
-                  <h4 className="font-extrabold text-xs md:text-sm tracking-tighter uppercase text-white">{p.name}</h4>
-                  <span className="font-bold text-xs md:text-sm text-white/70 mt-1 block">R$ {p.price.toFixed(0)}</span>
+                  <p className="font-black text-[11px] uppercase tracking-tight text-white/80 truncate">{p.name}</p>
+                  <p className="text-[11px] font-bold text-white/30 mt-0.5">
+                    R$ {(p.promoPrice || p.price).toFixed(0)}
+                  </p>
                 </div>
               ))}
             </div>
           </section>
         )}
-      </main>
 
-      {/* Footer */}
-      <footer className="bg-[#0e0e0e] w-full rounded-t-[3rem] mt-20 flex flex-col items-center px-10 py-16 text-center">
-        <h2 className="font-black text-xl text-white mb-4 tracking-tighter">PERIGOIMPORTZ</h2>
-        <p className="text-sm text-white/40 leading-relaxed font-medium">{data.address}</p>
-      </footer>
+        {/* ── Footer ── */}
+        <footer className="w-full mt-12 px-5 md:px-10 py-12 flex flex-col items-center text-center"
+          style={{borderTop:'1px solid rgba(255,255,255,0.04)'}}>
+          <p className="font-black text-sm tracking-tighter text-white/60">PERIGOIMPORTZ</p>
+          <p className="text-[11px] text-white/20 mt-2">{data.address}</p>
+        </footer>
+      </main>
 
       <WhatsAppButton />
     </div>
