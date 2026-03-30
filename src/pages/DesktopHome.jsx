@@ -78,7 +78,7 @@ export default function DesktopHome() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {featured.map(p => (
               <div key={p.id || p._id} className="group cursor-pointer" onClick={() => navigate(`/produto/${p.id || p._id}`)}>
-                <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-surface-container-low mb-5 transition-transform duration-500 hover:scale-[1.02]">
+                <div className="relative aspect-square overflow-hidden rounded-xl bg-surface-container-low mb-5 transition-transform duration-500 hover:scale-[1.02]">
                   <img src={p.image} alt={p.name} className="w-full h-full object-cover transition-all duration-700" />
                   {p.featured && (
                     <div className="absolute top-5 left-5">
@@ -97,7 +97,7 @@ export default function DesktopHome() {
                     <div className="flex flex-col items-end">
                       {p.promoPrice ? (
                         <>
-                          <span className="font-['Inter'] text-lg font-bold text-red-500 shrink-0">R$ {p.promoPrice.toFixed(0)}</span>
+                          <span className="font-['Inter'] text-lg font-bold text-white shrink-0">R$ {p.promoPrice.toFixed(0)}</span>
                           <span className="font-['Inter'] text-xs font-medium text-white/30 line-through">R$ {p.price.toFixed(0)}</span>
                         </>
                       ) : (

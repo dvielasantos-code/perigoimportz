@@ -76,11 +76,11 @@ export default function MobileHome() {
                 <div className="grid grid-cols-2 gap-3">
                     {featured.map(p => (
                         <div key={p.id || p._id} className="group flex flex-col gap-3 cursor-pointer" onClick={() => navigate(`/produto/${p.id || p._id}`)}>
-                            <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-surface-container-low">
+                            <div className="relative aspect-square rounded-xl overflow-hidden bg-surface-container-low">
                                 <img src={p.image} alt={p.name} className="w-full h-full object-cover active:scale-105 transition-transform" />
                                 {p.featured && (
                                     <div className="absolute top-2 left-2">
-                                        <span className="bg-primary text-on-primary text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest">Novo</span>
+                                        <span className="bg-primary text-on-primary text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest">Destaque</span>
                                     </div>
                                 )}
                             </div>
@@ -89,7 +89,7 @@ export default function MobileHome() {
                                 <div className="flex items-center gap-2 mt-1">
                                     {p.promoPrice ? (
                                         <>
-                                            <span className="font-black text-red-500 text-[13px]">R$ {p.promoPrice.toFixed(0)}</span>
+                                            <span className="font-black text-white text-[13px]">R$ {p.promoPrice.toFixed(0)}</span>
                                             <span className="font-bold text-white/30 text-[10px] line-through">R$ {p.price.toFixed(0)}</span>
                                         </>
                                     ) : (

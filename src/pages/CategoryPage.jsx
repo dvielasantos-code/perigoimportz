@@ -115,7 +115,7 @@ export default function CategoryPage() {
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-8">
               {products.map(p => (
                 <div key={p.id || p._id} className="group cursor-pointer" onClick={() => navigate(`/produto/${p.id || p._id}`)}>
-                  <div className="relative aspect-[3/4] overflow-hidden rounded-xl md:rounded-2xl bg-surface-container-low mb-3 md:mb-5 transition-transform duration-500 hover:scale-[1.02]">
+                  <div className="relative aspect-square overflow-hidden rounded-xl md:rounded-2xl bg-surface-container-low mb-3 md:mb-5 transition-transform duration-500 hover:scale-[1.02]">
                     <img src={p.image} alt={p.name} className="w-full h-full object-cover transition-all duration-700" />
                     {p.featured && (
                       <div className="absolute top-3 left-3 md:top-5 md:left-5">
@@ -134,7 +134,7 @@ export default function CategoryPage() {
                     <div className="flex items-center gap-2 mt-1">
                       {p.promoPrice ? (
                         <>
-                          <span className="font-black text-sm md:text-lg text-red-500">R$ {p.promoPrice.toFixed(0)}</span>
+                          <span className="font-black text-sm md:text-lg text-white">R$ {p.promoPrice.toFixed(0)}</span>
                           <span className="font-bold text-[10px] md:text-xs text-white/30 line-through">R$ {p.price.toFixed(0)}</span>
                         </>
                       ) : (
