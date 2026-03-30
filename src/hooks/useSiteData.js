@@ -15,13 +15,20 @@ export function useSiteData() {
       
       // Constrói hierarquia
       const parents = allCats.filter(c => !c.parentId);
-      const builtMenu = parents.map(p => ({
-        ...p,
-        subcategories: allCats.filter(c => c.parentId === p.id)
-      }));
+      parents.sort((a,b) => (a.order || 0) - (b.order || 0));
+      
+      const builtMenu = parents.map(p => {
+        const subs = allCats.filter(c => c.parentId === p.id);
+        subs.sort((a,b) => (a.order || 0) - (b.order || 0));
+        return {
+          ...p,
+          subcategories: subs
+        };
+      });
       
       setSiteData(prev => ({
         ...prev,
+        categories: parents, // Sobrescreve data.categories hardcoded
         menuCategories: builtMenu
       }));
     });
