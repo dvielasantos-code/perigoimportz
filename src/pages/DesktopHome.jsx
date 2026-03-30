@@ -5,6 +5,7 @@ import { useSiteData } from '../hooks/useSiteData';
 import SideMenu from '../components/SideMenu';
 import WhatsAppButton from '../components/WhatsAppButton';
 import AutoCarousel from '../components/AutoCarousel';
+import { CustomIcon } from '../components/CustomIcons';
 
 export default function DesktopHome() {
   const { products } = useProducts();
@@ -57,7 +58,7 @@ export default function DesktopHome() {
                 style={{ width: 'calc((100vw - 64px - 64px) / 5)' }} 
                 className="shrink-0 group relative aspect-[4/3] rounded-xl overflow-hidden bg-surface-container-low flex flex-col items-center justify-center cursor-pointer hover:bg-surface-container transition-colors duration-500"
               >
-                <span className="material-symbols-outlined text-3xl mb-3 group-hover:scale-110 transition-transform duration-500 text-white">{cat.icon}</span>
+                <CustomIcon name={cat.icon} className="w-8 h-8 mb-3 group-hover:scale-110 transition-transform duration-500 text-white" />
                 <span className="font-['Manrope'] font-bold text-base tracking-tight text-white">{cat.name}</span>
               </div>
             ))}

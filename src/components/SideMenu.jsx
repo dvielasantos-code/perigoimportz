@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSiteData } from '../hooks/useSiteData';
+import { CustomIcon } from './CustomIcons';
 
 export default function SideMenu({ isOpen, onClose }) {
   const { data } = useSiteData();
@@ -63,7 +64,7 @@ export default function SideMenu({ isOpen, onClose }) {
                   className="w-full flex items-center justify-between py-3 px-3 rounded-xl text-white/80 hover:text-white hover:bg-white/5 transition-all duration-200 group"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="material-symbols-outlined text-xl text-white/40 group-hover:text-white transition-colors">{cat.icon}</span>
+                    <CustomIcon name={cat.icon} className="w-5 h-5 text-white/40 group-hover:text-white transition-colors" />
                     <span className="font-semibold text-sm tracking-tight">{cat.name}</span>
                   </div>
                   {cat.subcategories && (

@@ -5,6 +5,7 @@ import { useSiteData } from '../hooks/useSiteData';
 import SideMenu from '../components/SideMenu';
 import WhatsAppButton from '../components/WhatsAppButton';
 import AutoCarousel from '../components/AutoCarousel';
+import { CustomIcon } from '../components/CustomIcons';
 
 export default function MobileHome() {
   const { products } = useProducts();
@@ -55,7 +56,7 @@ export default function MobileHome() {
                           onClick={() => navigate(`/categoria/${cat.id}`)}
                           className="min-w-[100px] shrink-0 flex flex-col items-center justify-center p-4 bg-surface-container-low rounded-2xl aspect-square text-center active:bg-surface-container-high transition-colors cursor-pointer"
                         >
-                            <span className="material-symbols-outlined mb-2 text-white text-xl">{cat.icon}</span>
+                            <CustomIcon name={cat.icon} className="mb-2 text-white w-6 h-6" />
                             <span className="text-[10px] font-bold uppercase tracking-tight text-white/90">{cat.name}</span>
                         </div>
                     ))}

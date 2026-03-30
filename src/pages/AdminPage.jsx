@@ -14,26 +14,12 @@ import {
 
 
 
-const ICONS = [
-  { id: 'checkroom', label: 'Camiseta'  },
-  { id: 'apparel', label: 'Peça'    },
-  { id: 'straighten', label: 'Calça'     },
-  { id: 'sprint', label: 'Tênis'     },
-  { id: 'school', label: 'Boné'      },
-  { id: 'diamond', label: 'Acess.'    },
-  { id: 'watch', label: 'Relógio'   },
-  { id: 'eyeglasses', label: 'Óculos'    },
-  { id: 'shopping_bag', label: 'Bolsa'     },
-  { id: 'styler', label: 'Camisa'    },
-  { id: 'dry_cleaning', label: 'Regata'    },
-  { id: 'laundry', label: 'Bermuda'   },
-  { id: 'category', label: 'Diversos'     },
-];
+import { CustomIconsList, CustomIcon } from '../components/CustomIcons';
 
 const G = '#22c55e';
 
 // Funcao de renderizar icone, fallback para pacote
-const ri = icon => <span className="material-symbols-outlined">{icon || 'category'}</span>;
+const ri = icon => <CustomIcon name={icon || 'misc'} className="w-6 h-6" />;
 
 // ─── Componentes de Categoria Draggável ──────────────────────────────────────
 function CategoryRow({ cat, onToggle, onRemove, isChild, children = [], isDraggingParent, isSelected, onSelect, selectedCats }) {
@@ -145,7 +131,7 @@ export default function AdminPage() {
   const [newProduct, setNewProduct] = useState({
     name:'', price:'', promoPrice:'', category:'', brand:'', description:'', status:'ativo', featured:true,
   });
-  const [newCat, setNewCat]         = useState({ name:'', icon:'checkroom', parentId:null });
+  const [newCat, setNewCat]         = useState({ name:'', icon:'tshirt', parentId:null });
   const [newBanner, setNewBanner]   = useState({ title:'', link:'' });
   const [selectedCats, setSelectedCats] = useState(new Set());
 
@@ -530,12 +516,12 @@ export default function AdminPage() {
                 <div>
                   <label className="text-[9px] font-black uppercase tracking-widest block mb-1" style={{color:G}}>Ícone</label>
                   <div className="flex flex-wrap gap-1 p-2 rounded-xl bg-[#1a1a1a] border border-[#2a2a2a]" style={{maxHeight:80,overflowY:'auto'}}>
-                    {ICONS.map(ic=>(
+                    {CustomIconsList.map(ic=>(
                       <button key={ic.id} type="button" title={ic.label}
                         onClick={()=>setNewCat({...newCat,icon:ic.id})}
                         className="w-8 h-8 flex items-center justify-center rounded-lg text-lg transition-all text-white"
                         style={newCat.icon===ic.id?{background:'#22c55e',color:'#000',transform:'scale(1.15)'}:{background:'#252525'}}>
-                        <span className="material-symbols-outlined text-[18px]">{ic.id}</span>
+                        <CustomIcon name={ic.id} className="w-5 h-5" />
                       </button>
                     ))}
                   </div>
