@@ -135,6 +135,12 @@ export default function AdminPage() {
   const [newBanner, setNewBanner]   = useState({ title:'', link:'' });
   const [selectedCats, setSelectedCats] = useState(new Set());
 
+  // ─── Estado da tab Produtos ────────────────────────────────────────────────
+  const [prodSearch,    setProdSearch]    = useState('');
+  const [prodCatFilter, setProdCatFilter] = useState('__all__');
+  const [selectedProds, setSelectedProds] = useState(new Set());
+  const [editingProd,   setEditingProd]   = useState(null); // produto sendo editado no modal
+
   const toggleSelectCat = (id) => {
     const next = new Set(selectedCats);
     if (next.has(id)) next.delete(id);
@@ -155,6 +161,52 @@ export default function AdminPage() {
       await deleteDoc(doc(db, 'categories', id));
     }
     setSelectedCats(new Set());
+    await loadAll();
+    setLoading(false);
+  };
+
+  // ─── Seleção múltipla de produtos ──────────────────────────────────────────
+  const toggleSelectProd = id => {
+    const next = new Set(selectedProds);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    setSelectedProds(next);
+  };
+
+  const deleteSelectedProds = async () => {
+    if (!window.confirm(`Excluir ${selectedProds.size} produto(s)?`)) return;
+    setLoading(true);
+    for (const id of Array.from(selectedProds)) {
+      await deleteDoc(doc(db, 'products', id));
+    }
+    setSelectedProds(new Set());
+    await loadAll();
+    setLoading(false);
+  };
+
+  // ─── Toggle ativo/inativo produto ─────────────────────────────────────────
+  const toggleProdActive = async p => {
+    const next = p.status === 'ativo' ? 'inativo' : 'ativo';
+    await setDoc(doc(db, 'products', p.id), { ...p, status: next });
+    loadAll();
+  };
+
+  // ─── Atualizar produto no modal ───────────────────────────────────────────
+  const updateProduct = async e => {
+    e.preventDefault(); setLoading(true);
+    let imageUrl = editingProd.image;
+    // Se o user escolheu nova foto no modal
+    if (editingProd._newFile) {
+      const uploaded = await uploadCloud(editingProd._newFile);
+      if (uploaded) imageUrl = uploaded;
+    }
+    await setDoc(doc(db, 'products', editingProd.id), {
+      ...editingProd,
+      image: imageUrl,
+      price: Number(editingProd.price),
+      promoPrice: editingProd.promoPrice ? Number(editingProd.promoPrice) : null,
+      _newFile: undefined,
+    });
+    setEditingProd(null);
     await loadAll();
     setLoading(false);
   };
@@ -330,6 +382,19 @@ export default function AdminPage() {
   const orphans     = categories.filter(c => c.parentId && !parentCats.find(p => p.id === c.parentId));
   const activeCat   = categories.find(c => c.id === activeId);
 
+  // ─── Produtos filtrados ───────────────────────────────────────────────────
+  const filteredProds = products.filter(p => {
+    const matchCat = prodCatFilter === '__all__' || p.category === prodCatFilter;
+    const q = prodSearch.toLowerCase();
+    const matchQ = !q ||
+      (p.name  || '').toLowerCase().includes(q) ||
+      (p.brand || '').toLowerCase().includes(q) ||
+      String(p.price).includes(q) ||
+      String(p.promoPrice || '').includes(q) ||
+      (p.category || '').toLowerCase().includes(q);
+    return matchCat && matchQ;
+  });
+
   // ─── Login ─────────────────────────────────────────────────────────────────
   // Aguarda Firebase restaurar sessão (evita flash do login)
   if (authLoading) return (
@@ -412,83 +477,239 @@ export default function AdminPage() {
 
         {/* ══ PRODUTOS ══ */}
         {activeTab==='produtos' && (
-          <div className="grid grid-cols-5 gap-6">
-            <div className="col-span-3 p-6 rounded-2xl bg-[#111] border border-[#222] max-h-[85vh] overflow-y-auto">
-              <h3 className="font-black uppercase tracking-tighter text-sm mb-5">Catálogo ({products.length})</h3>
-              <div className="flex flex-col gap-2">
-                {products.length===0 && (
-                  <div className="py-20 text-center">
-                    <span className="material-symbols-outlined text-5xl text-[#2a2a2a]">inventory_2</span>
-                    <p className="text-xs font-bold uppercase tracking-widest mt-3 text-[#333]">Catálogo vazio</p>
-                  </div>
-                )}
-                {products.map(p=>(
-                  <div key={p.id} className="flex items-center gap-3 p-3 rounded-xl bg-[#1a1a1a] border border-[#2a2a2a] group hover:border-green-500/30 transition-all">
-                    <div className="w-14 h-[72px] rounded-lg overflow-hidden shrink-0 bg-black">
-                      {p.image&&<img src={p.image} className="w-full h-full object-cover"/>}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-black text-xs uppercase tracking-tight truncate">{p.name}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        {p.promoPrice
-                          ?<><span style={{color:G}} className="font-black text-[11px]">R$ {p.promoPrice}</span><span className="line-through text-[10px] text-[#444]">R$ {p.price}</span></>
-                          :<span className="font-bold text-[11px] text-[#aaa]">R$ {p.price}</span>}
-                      </div>
-                      <p className="text-[9px] font-bold uppercase tracking-widest mt-1 text-[#444]">{p.category}</p>
-                    </div>
-                    <button onClick={()=>remove('products',p.id)} className="opacity-0 group-hover:opacity-100 p-2 rounded-xl text-red-500 hover:bg-red-500 hover:text-white transition-all">
-                      <span className="material-symbols-outlined text-sm">delete</span>
-                    </button>
-                  </div>
-                ))}
+          <div className="flex flex-col gap-4">
+
+            {/* Barra superior: busca + ações bulk */}
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="relative flex-1 min-w-[220px]">
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#555] text-lg">search</span>
+                <input
+                  placeholder="Buscar por nome, marca, preço..."
+                  value={prodSearch}
+                  onChange={e=>setProdSearch(e.target.value)}
+                  className="pl-10 pr-4 py-2.5 rounded-xl text-sm text-white outline-none w-full bg-[#1a1a1a] border border-[#2a2a2a] focus:border-green-500 transition-colors"
+                />
               </div>
+              {selectedProds.size > 0 && (
+                <button onClick={deleteSelectedProds} disabled={loading}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors">
+                  <span className="material-symbols-outlined text-sm">delete_sweep</span>
+                  Excluir {selectedProds.size}
+                </button>
+              )}
             </div>
 
-            <div className="col-span-2 p-6 rounded-2xl bg-[#111] border border-[#222]">
-              <h3 className="font-black uppercase tracking-tighter text-sm mb-5">Adicionar Produto</h3>
-              <form onSubmit={addProduct} className="flex flex-col gap-3">
-                <input required placeholder="Nome do Produto" value={newProduct.name} onChange={e=>setNewProduct({...newProduct,name:e.target.value})} className={inp}/>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-[9px] font-black uppercase tracking-widest block mb-1" style={{color:G}}>Preço</label>
-                    <input required type="number" step="0.01" placeholder="199.90" value={newProduct.price} onChange={e=>setNewProduct({...newProduct,price:e.target.value})} className={inp}/>
-                  </div>
-                  <div>
-                    <label className="text-[9px] font-black uppercase tracking-widest block mb-1 text-red-400">Promo</label>
-                    <input type="number" step="0.01" placeholder="149.90" value={newProduct.promoPrice} onChange={e=>setNewProduct({...newProduct,promoPrice:e.target.value})} className={inp}/>
-                  </div>
-                </div>
-                <div>
-                  <label className="text-[9px] font-black uppercase tracking-widest block mb-1" style={{color:G}}>Categoria</label>
-                  <select required value={newProduct.category} onChange={e=>setNewProduct({...newProduct,category:e.target.value})} className={inp}>
-                    <option value="">Selecione...</option>
-                    {parentCats.map(p=>(
-                      <optgroup key={p.id} label={p.name}>
-                        <option value={p.id}>{p.name} (geral)</option>
-                        {childrenOf(p.id).map(c=><option key={c.id} value={c.id}>↳ {c.name}</option>)}
-                      </optgroup>
-                    ))}
-                  </select>
-                </div>
-                <input placeholder="Marca" value={newProduct.brand} onChange={e=>setNewProduct({...newProduct,brand:e.target.value})} className={inp}/>
-                <textarea required rows={3} placeholder="Descrição..." value={newProduct.description} onChange={e=>setNewProduct({...newProduct,description:e.target.value})} className={`${inp} resize-none`}/>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" checked={newProduct.featured} onChange={e=>setNewProduct({...newProduct,featured:e.target.checked})} className="w-4 h-4 accent-green-500"/>
-                  <span className="text-[10px] font-black uppercase tracking-widest" style={{color:G}}>Destaque</span>
-                </label>
-                <div className="relative p-5 rounded-xl flex flex-col items-center gap-2 cursor-pointer transition-all"
-                  style={{border:`2px dashed ${files.length?G:'#2a2a2a'}`,background:'#141414'}}>
-                  <span className="material-symbols-outlined text-2xl text-[#333]">upload</span>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-[#444]">Até 7 fotos</p>
-                  {files.length>0&&<p className="text-[10px] font-bold" style={{color:G}}>{files.length} foto(s)</p>}
-                  <input type="file" multiple accept="image/*" onChange={e=>setFiles(Array.from(e.target.files).slice(0,7))} className="absolute inset-0 opacity-0 cursor-pointer"/>
-                </div>
-                <button type="submit" disabled={loading}
-                  className="py-4 rounded-xl text-black font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 mt-2 hover:opacity-90 transition-opacity"
-                  style={{background:loading?'#333':G,color:'#000'}}>
-                  {loading?<><span className="animate-spin h-4 w-4 border-2 border-black border-t-transparent rounded-full"/>Enviando...</>:'Publicar no Catálogo'}
+            {/* Abas por categoria */}
+            <div className="flex gap-2 flex-wrap">
+              <button
+                onClick={()=>setProdCatFilter('__all__')}
+                className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all"
+                style={prodCatFilter==='__all__'?{background:G,color:'#000'}:{background:'#1a1a1a',color:'#888',border:'1px solid #2a2a2a'}}>
+                Todos ({products.length})
+              </button>
+              {categories.map(cat=>(
+                <button key={cat.id}
+                  onClick={()=>setProdCatFilter(cat.id)}
+                  className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all"
+                  style={prodCatFilter===cat.id?{background:G,color:'#000'}:{background:'#1a1a1a',color:'#888',border:'1px solid #2a2a2a'}}>
+                  {cat.name} ({products.filter(p=>p.category===cat.id).length})
                 </button>
-              </form>
+              ))}
+            </div>
+
+            {/* Grid de produtos */}
+            <div className="grid grid-cols-5 gap-4">
+              {/* Lista */}
+              <div className="col-span-3 p-4 rounded-2xl bg-[#111] border border-[#222] max-h-[75vh] overflow-y-auto">
+                {/* Header selecionar tudo */}
+                {filteredProds.length > 0 && (
+                  <div className="flex items-center gap-2 mb-3 px-1">
+                    <input type="checkbox"
+                      checked={filteredProds.length > 0 && filteredProds.every(p => selectedProds.has(p.id))}
+                      onChange={() => {
+                        const allIds = filteredProds.map(p=>p.id);
+                        const allSelected = allIds.every(id=>selectedProds.has(id));
+                        const next = new Set(selectedProds);
+                        allIds.forEach(id => allSelected ? next.delete(id) : next.add(id));
+                        setSelectedProds(next);
+                      }}
+                      className="w-4 h-4 accent-red-500 cursor-pointer"
+                    />
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#555]">
+                      {filteredProds.length} produto(s)
+                    </span>
+                  </div>
+                )}
+
+                {filteredProds.length === 0 && (
+                  <div className="py-20 text-center">
+                    <span className="material-symbols-outlined text-5xl text-[#2a2a2a]">inventory_2</span>
+                    <p className="text-xs font-bold uppercase tracking-widest mt-3 text-[#333]">Nenhum produto encontrado</p>
+                  </div>
+                )}
+
+                <div className="flex flex-col gap-1.5">
+                  {filteredProds.map(p=>(
+                    <div key={p.id}
+                      className="flex items-center gap-3 p-2.5 rounded-xl border transition-all cursor-pointer group"
+                      style={{
+                        background: selectedProds.has(p.id) ? 'rgba(239,68,68,0.07)' : '#191919',
+                        borderColor: selectedProds.has(p.id) ? '#ef4444' : '#242424'
+                      }}>
+                      {/* Checkbox */}
+                      <input type="checkbox"
+                        checked={selectedProds.has(p.id)}
+                        onChange={()=>toggleSelectProd(p.id)}
+                        className="w-4 h-4 accent-red-500 shrink-0 cursor-pointer"
+                      />
+
+                      {/* Foto */}
+                      <div className="w-10 h-12 rounded-lg overflow-hidden shrink-0 bg-[#222]">
+                        {p.image && <img src={p.image} className="w-full h-full object-cover"/>}
+                      </div>
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-black text-[11px] uppercase tracking-tight truncate text-white" style={{opacity:p.status==='ativo'?1:0.4}}>
+                          {p.name}
+                        </p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          {p.promoPrice
+                            ? <><span style={{color:G}} className="font-black text-[10px]">R$ {Number(p.promoPrice).toFixed(0)}</span><span className="line-through text-[9px] text-[#444]">R$ {Number(p.price).toFixed(0)}</span></>
+                            : <span className="font-bold text-[10px] text-[#888]">R$ {Number(p.price).toFixed(0)}</span>}
+                          <span className="text-[9px] text-[#444] uppercase tracking-widest ml-1">{p.category}</span>
+                        </div>
+                      </div>
+
+                      {/* Ações */}
+                      <div className="flex items-center gap-1 shrink-0">
+                        {/* Toggle ativo */}
+                        <label className="relative inline-flex items-center cursor-pointer" title={p.status==='ativo'?'Desativar':'Ativar'}>
+                          <input type="checkbox" className="sr-only peer" checked={p.status==='ativo'} onChange={()=>toggleProdActive(p)} />
+                          <div className="w-8 h-4 bg-[#333] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-green-500"></div>
+                        </label>
+                        {/* Editar */}
+                        <button onClick={()=>setEditingProd({...p})} className="p-1.5 rounded-lg text-[#555] hover:text-white hover:bg-[#333] transition-all">
+                          <span className="material-symbols-outlined text-sm">edit</span>
+                        </button>
+                        {/* Excluir */}
+                        <button onClick={()=>remove('products',p.id)} className="p-1.5 rounded-lg text-[#555] hover:text-red-500 hover:bg-red-500/10 transition-all">
+                          <span className="material-symbols-outlined text-sm">delete</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Formulário adicionar/editar */}
+              <div className="col-span-2">
+                {editingProd ? (
+                  /* ── Modal de Edição ── */
+                  <div className="p-5 rounded-2xl bg-[#111] border border-green-500/30">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-black uppercase tracking-tighter text-sm" style={{color:G}}>Editando Produto</h3>
+                      <button onClick={()=>setEditingProd(null)} className="text-[#555] hover:text-white">
+                        <span className="material-symbols-outlined">close</span>
+                      </button>
+                    </div>
+                    <form onSubmit={updateProduct} className="flex flex-col gap-3">
+                      <input required placeholder="Nome" value={editingProd.name} onChange={e=>setEditingProd({...editingProd,name:e.target.value})} className={inp}/>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-[9px] font-black uppercase tracking-widest block mb-1" style={{color:G}}>Preço</label>
+                          <input required type="number" step="0.01" value={editingProd.price} onChange={e=>setEditingProd({...editingProd,price:e.target.value})} className={inp}/>
+                        </div>
+                        <div>
+                          <label className="text-[9px] font-black uppercase tracking-widest block mb-1 text-red-400">Promo</label>
+                          <input type="number" step="0.01" value={editingProd.promoPrice||''} onChange={e=>setEditingProd({...editingProd,promoPrice:e.target.value})} className={inp}/>
+                        </div>
+                      </div>
+                      <select value={editingProd.category} onChange={e=>setEditingProd({...editingProd,category:e.target.value})} className={inp}>
+                        <option value="">Categoria...</option>
+                        {parentCats.map(c=>(
+                          <optgroup key={c.id} label={c.name}>
+                            <option value={c.id}>{c.name} (geral)</option>
+                            {childrenOf(c.id).map(s=><option key={s.id} value={s.id}>↳ {s.name}</option>)}
+                          </optgroup>
+                        ))}
+                      </select>
+                      <input placeholder="Marca" value={editingProd.brand||''} onChange={e=>setEditingProd({...editingProd,brand:e.target.value})} className={inp}/>
+                      <textarea rows={2} placeholder="Descrição" value={editingProd.description||''} onChange={e=>setEditingProd({...editingProd,description:e.target.value})} className={`${inp} resize-none`}/>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" checked={editingProd.featured} onChange={e=>setEditingProd({...editingProd,featured:e.target.checked})} className="w-4 h-4 accent-green-500"/>
+                        <span className="text-[10px] font-black uppercase tracking-widest" style={{color:G}}>Destaque</span>
+                      </label>
+                      {/* Trocar foto */}
+                      <div className="relative p-3 rounded-xl flex items-center gap-3 cursor-pointer"
+                        style={{border:`1px dashed ${editingProd._newFile?G:'#2a2a2a'}`,background:'#141414'}}>
+                        {editingProd.image && <img src={editingProd.image} className="w-10 h-12 object-cover rounded-lg shrink-0"/>}
+                        <div>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-[#555]">Trocar foto</p>
+                          {editingProd._newFile && <p className="text-[10px] font-bold mt-0.5" style={{color:G}}>{editingProd._newFile.name}</p>}
+                        </div>
+                        <input type="file" accept="image/*" onChange={e=>setEditingProd({...editingProd,_newFile:e.target.files[0]})} className="absolute inset-0 opacity-0 cursor-pointer"/>
+                      </div>
+                      <div className="flex gap-2">
+                        <button type="submit" disabled={loading} className="flex-1 py-3 rounded-xl text-black font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-opacity" style={{background:G}}>
+                          {loading?'Salvando...':'Salvar'}
+                        </button>
+                        <button type="button" onClick={()=>setEditingProd(null)} className="py-3 px-4 rounded-xl text-[#555] font-black text-[10px] uppercase tracking-widest border border-[#2a2a2a] hover:border-white transition-all">
+                          Cancelar
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                ) : (
+                  /* ── Formulário: Adicionar Produto ── */
+                  <div className="p-5 rounded-2xl bg-[#111] border border-[#222]">
+                    <h3 className="font-black uppercase tracking-tighter text-sm mb-4">Adicionar Produto</h3>
+                    <form onSubmit={addProduct} className="flex flex-col gap-3">
+                      <input required placeholder="Nome do Produto" value={newProduct.name} onChange={e=>setNewProduct({...newProduct,name:e.target.value})} className={inp}/>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-[9px] font-black uppercase tracking-widest block mb-1" style={{color:G}}>Preço</label>
+                          <input required type="number" step="0.01" placeholder="199.90" value={newProduct.price} onChange={e=>setNewProduct({...newProduct,price:e.target.value})} className={inp}/>
+                        </div>
+                        <div>
+                          <label className="text-[9px] font-black uppercase tracking-widest block mb-1 text-red-400">Promo</label>
+                          <input type="number" step="0.01" placeholder="149.90" value={newProduct.promoPrice} onChange={e=>setNewProduct({...newProduct,promoPrice:e.target.value})} className={inp}/>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-[9px] font-black uppercase tracking-widest block mb-1" style={{color:G}}>Categoria</label>
+                        <select required value={newProduct.category} onChange={e=>setNewProduct({...newProduct,category:e.target.value})} className={inp}>
+                          <option value="">Selecione...</option>
+                          {parentCats.map(p=>(
+                            <optgroup key={p.id} label={p.name}>
+                              <option value={p.id}>{p.name} (geral)</option>
+                              {childrenOf(p.id).map(c=><option key={c.id} value={c.id}>↳ {c.name}</option>)}
+                            </optgroup>
+                          ))}
+                        </select>
+                      </div>
+                      <input placeholder="Marca" value={newProduct.brand} onChange={e=>setNewProduct({...newProduct,brand:e.target.value})} className={inp}/>
+                      <textarea required rows={2} placeholder="Descrição..." value={newProduct.description} onChange={e=>setNewProduct({...newProduct,description:e.target.value})} className={`${inp} resize-none`}/>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" checked={newProduct.featured} onChange={e=>setNewProduct({...newProduct,featured:e.target.checked})} className="w-4 h-4 accent-green-500"/>
+                        <span className="text-[10px] font-black uppercase tracking-widest" style={{color:G}}>Destaque</span>
+                      </label>
+                      <div className="relative p-5 rounded-xl flex flex-col items-center gap-2 cursor-pointer transition-all"
+                        style={{border:`2px dashed ${files.length?G:'#2a2a2a'}`,background:'#141414'}}>
+                        <span className="material-symbols-outlined text-2xl text-[#333]">upload</span>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-[#444]">Até 7 fotos</p>
+                        {files.length>0&&<p className="text-[10px] font-bold" style={{color:G}}>{files.length} foto(s)</p>}
+                        <input type="file" multiple accept="image/*" onChange={e=>setFiles(Array.from(e.target.files).slice(0,7))} className="absolute inset-0 opacity-0 cursor-pointer"/>
+                      </div>
+                      <button type="submit" disabled={loading}
+                        className="py-4 rounded-xl text-black font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 mt-1 hover:opacity-90 transition-opacity"
+                        style={{background:loading?'#333':G,color:'#000'}}>
+                        {loading?<><span className="animate-spin h-4 w-4 border-2 border-black border-t-transparent rounded-full"/>Enviando...</>:'Publicar no Catálogo'}
+                      </button>
+                    </form>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
