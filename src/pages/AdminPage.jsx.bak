@@ -12,7 +12,37 @@ import {
   useDraggable,
 } from '@dnd-kit/core';
 
-
+// ─── Presets ──────────────────────────────────────────────────────────────────
+const PRESET = [
+  { id: 'camisetas',     name: 'Camisetas',     icon: '👕', parentId: null, order: 0 },
+  { id: 'regatas',       name: 'Regatas',       icon: '🎽', parentId: 'camisetas', order: 0 },
+  { id: 'longsleeve',    name: 'Long Sleeve',   icon: '👕', parentId: 'camisetas', order: 1 },
+  { id: 'oversized',     name: 'Oversized',     icon: '👕', parentId: 'camisetas', order: 2 },
+  { id: 'polo',          name: 'Polo',          icon: '👕', parentId: 'camisetas', order: 3 },
+  { id: 'calcas',        name: 'Calças',        icon: '👖', parentId: null, order: 1 },
+  { id: 'jogger',        name: 'Jogger',        icon: '👖', parentId: 'calcas', order: 0 },
+  { id: 'cargo',         name: 'Cargo',         icon: '👖', parentId: 'calcas', order: 1 },
+  { id: 'jeans',         name: 'Jeans',         icon: '👖', parentId: 'calcas', order: 2 },
+  { id: 'shorts',        name: 'Shorts',        icon: '🩳', parentId: 'calcas', order: 3 },
+  { id: 'moletom-calca', name: 'Moletom Calça', icon: '👖', parentId: 'calcas', order: 4 },
+  { id: 'jaquetas',      name: 'Jaquetas',      icon: '🧥', parentId: null, order: 2 },
+  { id: 'corta-vento',   name: 'Corta Vento',   icon: '🧥', parentId: 'jaquetas', order: 0 },
+  { id: 'bomber',        name: 'Bomber',        icon: '🧥', parentId: 'jaquetas', order: 1 },
+  { id: 'moletons',      name: 'Moletons',      icon: '🧥', parentId: null, order: 3 },
+  { id: 'moletom-zip',   name: 'Zip Up',        icon: '🧥', parentId: 'moletons', order: 0 },
+  { id: 'crewneck',      name: 'Crewneck',      icon: '🧥', parentId: 'moletons', order: 1 },
+  { id: 'bone',          name: 'Bonés',         icon: '🧢', parentId: null, order: 4 },
+  { id: 'snapback',      name: 'Snapback',      icon: '🧢', parentId: 'bone', order: 0 },
+  { id: 'dad-hat',       name: 'Dad Hat',       icon: '🧢', parentId: 'bone', order: 1 },
+  { id: 'tenis',         name: 'Tênis',         icon: '👟', parentId: null, order: 5 },
+  { id: 'acessorios',    name: 'Acessórios',    icon: '💎', parentId: null, order: 6 },
+  { id: 'colares',       name: 'Colares',       icon: '📿', parentId: 'acessorios', order: 0 },
+  { id: 'pulseiras',     name: 'Pulseiras',     icon: '📿', parentId: 'acessorios', order: 1 },
+  { id: 'cintos',        name: 'Cintos',        icon: '🪡', parentId: 'acessorios', order: 2 },
+  { id: 'oculos',        name: 'Óculos',        icon: '🕶️', parentId: 'acessorios', order: 3 },
+  { id: 'meias',         name: 'Meias',         icon: '🧦', parentId: 'acessorios', order: 4 },
+  { id: 'conjuntos',     name: 'Conjuntos',     icon: '👔', parentId: null, order: 7 },
+];
 
 // Ícones disponíveis no seletor — emoji reais
 const ICONS = [
@@ -54,87 +84,126 @@ const ICON_MAP = {
 };
 const ri = icon => ICON_MAP[icon] || icon || '📦';
 
-// ─── Componentes de Categoria Draggável ──────────────────────────────────────
-function CategoryRow({ cat, onToggle, onRemove, isChild, children = [], isDraggingParent }) {
-  const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({ id: cat.id });
-  const { setNodeRef: setDropSortRef, isOver } = useDroppable({ id: cat.id });
-  const { setNodeRef: setDropNestRef, isOver: isNestOver } = useDroppable({ id: `drop:${cat.id}` });
-
+// ─── Chip draggável ───────────────────────────────────────────────────────────
+function DraggableChip({ cat, onToggle, onRemove }) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: cat.id });
   return (
     <div
-      ref={setDropSortRef}
-      className={"flex flex-col gap-2 transition-all w-full"}
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      className="flex items-center justify-between px-3 py-2 rounded-xl group/chip select-none transition-all"
       style={{
-        opacity: isDragging ? 0.3 : 1,
-        borderTop: isOver && !isChild ? '2px solid #22c55e' : 'none',
+        background: isDragging ? 'rgba(34,197,94,0.15)' : '#1a1a1a',
+        border: `1px solid ${isDragging ? G : '#2a2a2a'}`,
+        opacity: isDragging ? 0.4 : (cat.active ? 1 : 0.4),
+        cursor: 'grab',
+        touchAction: 'none',
       }}
     >
-      <div 
-        className="flex items-center gap-3 p-3 rounded-xl transition-all"
-        style={{
-          background: isChild ? '#141414' : '#1a1a1a',
-          border: `1px solid ${isNestOver ? '#22c55e' : '#2a2a2a'}`,
-          marginLeft: isChild ? '2rem' : '0',
-          position: 'relative'
-        }}
-      >
-        <div ref={setDragRef} {...listeners} {...attributes} className="cursor-grab active:cursor-grabbing text-[#555] hover:text-white px-2">
-          <span className="material-symbols-outlined text-xl">drag_indicator</span>
-        </div>
-        <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-[#222] text-xl shrink-0" style={{ opacity: cat.active ? 1 : 0.4 }}>
-          {ri(cat.icon)}
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="font-black text-sm uppercase tracking-tighter text-white" style={{ opacity: cat.active ? 1 : 0.4 }}>{cat.name}</p>
-          {!isChild && (
-            <p className="text-[10px] font-bold uppercase tracking-widest text-[#555]">
-              {children.length} subcategorias
-            </p>
-          )}
-        </div>
-        
-        <label className="relative inline-flex items-center cursor-pointer mr-3" title={cat.active ? "Desativar" : "Ativar"}>
-          <input type="checkbox" className="sr-only peer" checked={cat.active} onChange={() => onToggle(cat)} />
-          <div className="w-9 h-5 bg-[#333] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
-        </label>
-        
-        <button onClick={() => onRemove(cat.id)} className="text-[#555] hover:text-red-500 transition-colors px-2">
-          <span className="material-symbols-outlined text-lg">delete</span>
+      <div className="flex items-center gap-2 pointer-events-none">
+        <span className="text-xs text-[#555]">⠿</span>
+        <span className="text-base leading-none" style={{ opacity: cat.active ? 1 : 0.4 }}>{ri(cat.icon)}</span>
+        <span className="text-[10px] font-bold uppercase tracking-wide text-white">{cat.name}</span>
+      </div>
+      {/* Botões ignoram o drag */}
+      <div className="flex items-center gap-1 opacity-0 group-hover/chip:opacity-100 transition-opacity"
+        onPointerDown={e => e.stopPropagation()}>
+        <button onClick={() => onToggle(cat)}
+          className="text-xs transition-colors px-1"
+          style={{ color: cat.active ? G : '#555' }}>
+          {cat.active ? '👁' : '🚫'}
+        </button>
+        <button onClick={() => onRemove(cat.id)}
+          className="text-xs px-1 text-red-500/50 hover:text-red-500 transition-colors">
+          ✕
         </button>
       </div>
-
-      {!isChild && children && children.length > 0 && (
-         <div className="flex flex-col gap-2 mt-1 mb-2">
-           {children.map(sub => (
-             <CategoryRow key={sub.id} cat={sub} onToggle={onToggle} onRemove={onRemove} isChild />
-           ))}
-         </div>
-      )}
-
-      {!isChild && !isDraggingParent && (
-        <div 
-          ref={setDropNestRef} 
-          className="ml-8 mb-3 p-3 rounded-xl border border-dashed transition-all flex items-center justify-center gap-2"
-          style={{
-            background: isNestOver ? 'rgba(34,197,94,0.05)' : 'transparent',
-            borderColor: isNestOver ? '#22c55e' : '#2a2a2a',
-            color: isNestOver ? '#22c55e' : '#555'
-          }}
-        >
-          <span className="text-[10px] font-bold uppercase tracking-widest">
-            {isNestOver ? 'Soltar aqui para aninhar' : 'Arraste para cá para aninhar em ' + cat.name}
-          </span>
-        </div>
-      )}
     </div>
   );
 }
 
+// ─── Bloco de categoria pai (também é draggável para reordenar) ──────────────
+function ParentBlock({ parent, children, onToggle, onRemove, isDragging }) {
+  const { attributes, listeners, setNodeRef: setDragRef, isDragging: isThisDragging } = useDraggable({ id: parent.id });
+  const { setNodeRef: setDropRef, isOver } = useDroppable({ id: `drop:${parent.id}` });
+
+  return (
+    <div
+      ref={el => { setDragRef(el); setDropRef(el); }}
+      className="flex flex-col gap-3 p-4 rounded-2xl transition-all"
+      style={{
+        background: isOver ? 'rgba(34,197,94,0.08)' : '#141414',
+        border: `2px solid ${isOver ? G : parent.active ? 'rgba(34,197,94,0.25)' : '#1e1e1e'}`,
+        minWidth: 220,
+        maxWidth: 260,
+        opacity: isThisDragging ? 0.3 : 1,
+        transform: isOver ? 'scale(1.02)' : 'scale(1)',
+        cursor: 'default',
+      }}
+    >
+      {/* Header com drag handle */}
+      <div className="flex items-center gap-3">
+        <div {...listeners} {...attributes}
+          className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-xl leading-none cursor-grab active:cursor-grabbing hover:brightness-110 transition-all"
+          style={{ background: parent.active ? G : '#222' }}
+          title="Segure o ícone para mover este bloco inteiro">
+          {ri(parent.icon)}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-black text-xs uppercase tracking-tighter truncate text-white"
+            style={{ opacity: parent.active ? 1 : 0.35 }}>{parent.name}</p>
+          <div className="flex items-center gap-2 mt-1">
+            <span className="text-[9px] font-bold uppercase tracking-widest" style={{ color: parent.active ? G : '#3a3a3a' }}>
+              {children.length} sub{children.length !== 1 ? 'cats' : 'cat'}
+            </span>
+            <button onClick={() => onToggle(parent)}
+              className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border transition-all"
+              style={{
+                background: parent.active ? 'rgba(34,197,94,0.1)' : 'transparent',
+                borderColor: parent.active ? G : '#333',
+                color: parent.active ? G : '#444'
+              }}>
+              {parent.active ? 'ON' : 'OFF'}
+            </button>
+          </div>
+        </div>
+        <button onClick={() => onRemove(parent.id)}
+          className="p-1 text-red-500/30 hover:text-red-500 transition-colors">
+          <span className="material-symbols-outlined text-sm">close</span>
+        </button>
+      </div>
+
+      {/* Sub chips */}
+      <div className="flex flex-col gap-1.5 pt-3 border-t border-[#1e1e1e] min-h-[40px]">
+        {children.length === 0 && !isDragging && (
+          <p className="text-[8px] font-bold uppercase tracking-widest text-[#2a2a2a] text-center py-2">
+            Vazio
+          </p>
+        )}
+        {children.map(sub => (
+          <DraggableChip key={sub.id} cat={sub} onToggle={onToggle} onRemove={onRemove} />
+        ))}
+        {isDragging && (
+           <div className="text-center text-[8px] font-black uppercase tracking-widest py-1 rounded-lg border-2 border-dashed transition-all"
+           style={{
+             borderColor: isOver ? G : '#222',
+             color: isOver ? G : '#222',
+           }}>
+           {isOver ? 'SOLTE AQUI' : 'MOVER PARA CÁ'}
+         </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Ghost exibido durante o drag ────────────────────────────────────────────
 function DragGhost({ cat }) {
   if (!cat) return null;
   return (
-    <div className="flex items-center gap-3 px-5 py-3 rounded-2xl shadow-2xl scale-105"
-      style={{ background: '#22c55e', color: '#000', border: '1px solid #22c55e' }}>
+    <div className="flex items-center gap-3 px-5 py-3 rounded-2xl shadow-2xl scale-110"
+      style={{ background: G, color: '#000', border: `1px solid ${G}`, opacity: 1, pointerEvents: 'none' }}>
       <span className="text-2xl leading-none">{ri(cat.icon)}</span>
       <span className="text-xs font-black uppercase tracking-wide">{cat.name}</span>
     </div>
@@ -210,6 +279,25 @@ export default function AdminPage() {
     return j.secure_url || null;
   };
 
+  // ─── Popular ───────────────────────────────────────────────────────────────
+  const populateCats = async () => {
+    if (!window.confirm(`Apagar tudo e criar ${PRESET.length} categorias padrão?`)) return;
+    setPopMsg('Apagando categorias antigas...');
+    const snap = await getDocs(collection(db, 'categories'));
+    for (const d of snap.docs) await deleteDoc(doc(db, 'categories', d.id));
+
+    const parents  = PRESET.filter(c => !c.parentId);
+    const children = PRESET.filter(c =>  c.parentId);
+    let n = 0;
+    for (const c of [...parents, ...children]) {
+      setPopMsg(`Criando "${c.name}"... (${++n}/${PRESET.length})`);
+      await setDoc(doc(db, 'categories', c.id), { ...c, active:true });
+    }
+    setPopMsg(`✓ ${PRESET.length} categorias criadas com sucesso!`);
+    await loadAll();
+    setTimeout(() => setPopMsg(''), 3000);
+  };
+
   // ─── Criar categoria manual ────────────────────────────────────────────────
   const addCat = async e => {
     e.preventDefault();
@@ -240,58 +328,45 @@ export default function AdminPage() {
     if (!over) return;
 
     const draggedId = active.id;
-    const overId    = over.id;
+    const overId    = over.id; // 'drop:camisetas' ou 'drop:__root__' ou id da categoria para reordenar
 
     const draggedCat = categories.find(c => c.id === draggedId);
     if (!draggedCat) return;
 
-    // Se soltou na zona raiz (tirar de dentro)
-    if (overId === 'drop:__root__') {
-       if (draggedCat.parentId === null) return;
-       await setDoc(doc(db, 'categories', draggedId), { ...draggedCat, parentId: null });
-       await loadAll();
-       return;
-    }
-
-    // Se soltou em uma zona de "Drop (Aninhar)": Muda o Parent
-    if (String(overId).startsWith('drop:')) {
+    // Se soltou em uma zona de "Drop": Muda o Parent
+    if (overId.startsWith('drop:')) {
       const targetParentId = overId.replace('drop:', '');
-      if (draggedCat.parentId === targetParentId) return;
+      const newParent = targetParentId === '__root__' ? null : targetParentId;
+      if (draggedCat.parentId === newParent) return;
 
-      if (targetParentId === draggedId) return; // Anti-loop
-      const subIds = categories.filter(c => c.parentId === draggedId).map(c => c.id);
-      if (subIds.includes(targetParentId)) return; // Anti-loop (pai não pode aninhar em filho)
+      // Anti-loop (não deixar pai virar filho de si mesmo ou dos seus filhos)
+      if (newParent) {
+         if (newParent === draggedId) return;
+         const subIds = categories.filter(c => c.parentId === draggedId).map(c => c.id);
+         if (subIds.includes(newParent)) return;
+      }
 
-      await setDoc(doc(db, 'categories', draggedId), { ...draggedCat, parentId: targetParentId });
+      await setDoc(doc(db, 'categories', draggedId), { ...draggedCat, parentId: newParent });
       await loadAll();
       return;
     }
 
-    // Se soltou em cima de outra categoria: Reordenar e adotar o mesmo parent
+    // Se soltou em cima de outra categoria (sem prefixo drop:): Reordenar
     const overCat = categories.find(c => c.id === overId);
     if (overCat && overCat.id !== draggedId) {
+      // Reordenar no mesmo nível
       const sameLevel = categories.filter(c => c.parentId === overCat.parentId);
-      let oldIndex = sameLevel.findIndex(c => c.id === draggedId);
-      
-      // Se ele veio de outro parent, adiciona na nova lista do parent
-      if (oldIndex === -1) {
-         oldIndex = sameLevel.length; // coloca no final como fallback
-         sameLevel.push(draggedCat);
-      }
-      
+      const oldIndex = sameLevel.findIndex(c => c.id === draggedId);
       const newIndex = sameLevel.findIndex(c => c.id === overId);
 
       if (newIndex !== -1) {
-        sameLevel.splice(oldIndex, 1);
-        sameLevel.splice(newIndex, 0, draggedCat);
+        const newArr = [...sameLevel];
+        newArr.splice(oldIndex, 1);
+        newArr.splice(newIndex, 0, draggedCat);
 
-        // Atualizar ordens sequenciais no Firestore (incluindo a possível mudança de parentId)
-        for (let i = 0; i < sameLevel.length; i++) {
-          await setDoc(doc(db, 'categories', sameLevel[i].id), { 
-            ...sameLevel[i], 
-            parentId: overCat.parentId,
-            order: i 
-          });
+        // Atualizar ordens sequenciais no Firestore
+        for (let i = 0; i < newArr.length; i++) {
+          await setDoc(doc(db, 'categories', newArr[i].id), { ...newArr[i], order: i });
         }
         await loadAll();
       }
@@ -502,10 +577,22 @@ export default function AdminPage() {
         {activeTab==='categorias' && (
           <div className="flex flex-col gap-5">
 
+            {/* Form + Popular */}
             <div className="p-6 rounded-2xl bg-[#111] border border-[#222]">
               <div className="flex justify-between items-center mb-5">
                 <h3 className="font-black uppercase tracking-tighter text-sm">Nova Categoria</h3>
+                <button onClick={populateCats} disabled={!!popMsg}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-green-500 hover:text-black transition-all"
+                  style={{border:`1px solid ${G}`,color:G}}>
+                  <span className="material-symbols-outlined text-sm">bolt</span>
+                  Popular {PRESET.length} Categorias
+                </button>
               </div>
+              {popMsg && (
+                <div className="mb-4 px-4 py-3 rounded-xl text-[11px] font-bold" style={{background:'rgba(34,197,94,0.07)',border:`1px solid rgba(34,197,94,0.2)`,color:G}}>
+                  {popMsg}
+                </div>
+              )}
               <form onSubmit={addCat} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                 <div>
                   <label className="text-[9px] font-black uppercase tracking-widest block mb-1" style={{color:G}}>Nome</label>
@@ -537,11 +624,12 @@ export default function AdminPage() {
               </form>
             </div>
 
+            {/* Instrução drag */}
             {categories.length > 0 && (
-              <div className="flex items-center gap-3 px-5 py-3 rounded-xl" style={{background:'#111',border:'1px solid #222'}}>
-                <span className="material-symbols-outlined text-base text-[#555]">info</span>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-[#888]">
-                  Arraste uma categoria <strong className="text-white">sobre outra</strong> para reordenar. Arraste para o tracejado dela para <strong className="text-green-500">aninhar</strong>. Arraste para o topo para <strong className="text-red-400">tirar de dentro</strong>. 
+              <div className="flex items-center gap-3 px-5 py-3 rounded-2xl" style={{background:'rgba(34,197,94,0.04)',border:'1px solid rgba(34,197,94,0.12)'}}>
+                <span className="text-base">✋</span>
+                <p className="text-[11px] font-bold uppercase tracking-widest" style={{color:'rgba(34,197,94,0.7)'}}>
+                  Segure e arraste qualquer chip (subcategoria) para dentro de outro bloco pai
                 </p>
                 <span className="ml-auto text-[10px] font-bold text-[#444]">
                   {categories.length} total · {parentCats.length} pais · {categories.length-parentCats.length} subs
@@ -549,11 +637,12 @@ export default function AdminPage() {
               </div>
             )}
 
+            {/* Mapa com DND */}
             {categories.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-32 rounded-2xl border-2 border-dashed border-[#222]">
                 <span className="material-symbols-outlined text-5xl text-[#2a2a2a]">category</span>
                 <p className="text-xs font-bold uppercase tracking-widest mt-4 text-[#333]">Nenhuma categoria</p>
-                <p className="text-[10px] mt-2 text-[#2a2a2a]">Crie uma acima para começar</p>
+                <p className="text-[10px] mt-2 text-[#2a2a2a]">Crie uma acima ou clique em "Popular"</p>
               </div>
             ) : (
               <DndContext
@@ -561,31 +650,31 @@ export default function AdminPage() {
                 onDragStart={handleDragStart}
                 onDragEnd={handleDragEnd}
               >
+                {/* Zona de Drop para tornar Principal (visível só no drag) */}
                 {activeId && (
-                  <div className="mb-2">
+                  <div className="mb-4">
                     <div ref={useDroppable({ id: 'drop:__root__' }).setNodeRef}
-                      className="p-4 rounded-xl border-2 border-dashed transition-all flex items-center justify-center gap-2"
+                      className="p-5 rounded-2xl border-2 border-dashed transition-all flex items-center justify-center gap-2"
                       style={{
-                         background: 'rgba(34,197,94,0.05)',
+                         background: 'rgba(34,197,94,0.03)',
                          borderColor: G,
                          color: G
                       }}>
-                      <span className="material-symbols-outlined text-lg">vertical_align_top</span>
-                      <span className="text-[10px] font-black uppercase tracking-widest">Solte aqui para tornar Root (tirar de dentro)</span>
+                      <span className="text-xl">☀️</span>
+                      <span className="text-xs font-black uppercase tracking-widest">Solte aqui para tornar Principal</span>
                     </div>
                   </div>
                 )}
 
-                <div className="flex flex-col gap-1 w-full bg-[#111] border border-[#222] p-4 rounded-2xl">
+                <div className="flex flex-wrap gap-5 items-start">
                   {parentCats.map(parent => (
-                    <CategoryRow
+                    <ParentBlock
                       key={parent.id}
-                      cat={parent}
+                      parent={parent}
                       children={childrenOf(parent.id)}
                       onToggle={toggleActive}
                       onRemove={id => remove('categories', id)}
-                      isChild={false}
-                      isDraggingParent={activeId === parent.id}
+                      isDragging={!!activeId}
                     />
                   ))}
                 </div>
