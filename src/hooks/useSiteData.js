@@ -58,9 +58,21 @@ export function useSiteData() {
     const qCols = query(collection(db, "collections"), where("status", "==", "ativo"));
     const unsubCols = onSnapshot(qCols, (snap) => {
       const collections = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      collections.sort((a,b) => (a.order || 0) - (b.order || 0));
       setSiteData(prev => ({
         ...prev,
         collections
+      }));
+    });
+
+    // Escuta Seções da Home
+    const qSecs = query(collection(db, "homepage_sections"));
+    const unsubSecs = onSnapshot(qSecs, (snap) => {
+      const sections = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      sections.sort((a,b) => (a.order || 0) - (b.order || 0));
+      setSiteData(prev => ({
+        ...prev,
+        sections
       }));
     });
 
@@ -78,6 +90,7 @@ export function useSiteData() {
       unsubBanners();
       unsubBrands();
       unsubCols();
+      unsubSecs();
     };
   }, []);
 

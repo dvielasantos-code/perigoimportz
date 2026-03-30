@@ -121,6 +121,7 @@ export default function AdminPage() {
   const [products,   setProducts]   = useState([]);
   const [categories, setCategories] = useState([]);
   const [collections,setCollections] = useState([]);
+  const [sections,   setSections]    = useState([]); // Homepage ordering
   const [banners,    setBanners]    = useState([]);
   const [settings,   setSettings]   = useState({ whatsapp: '', address: '' });
 
@@ -229,19 +230,28 @@ export default function AdminPage() {
   }, []);
 
   const loadAll = async () => {
-    const [ps, cs, cls, bs, ss] = await Promise.all([
+    const [ps, cs, cls, bs, ss, hps] = await Promise.all([
       getDocs(collection(db, 'products')),
       getDocs(collection(db, 'categories')),
       getDocs(collection(db, 'collections')),
       getDocs(collection(db, 'banners')),
       getDocs(collection(db, 'settings')),
+      getDocs(collection(db, 'homepage_sections')),
     ]);
     setProducts(ps.docs.map(d => ({ id: d.id, ...d.data() })));
     const allCats = cs.docs.map(d => ({ id: d.id, ...d.data() }));
     // Ordenar categorias por campo 'order'
     allCats.sort((a,b) => (a.order || 0) - (b.order || 0));
     setCategories(allCats);
-    setCollections(cls.docs.map(d => ({ id: d.id, ...d.data() })));
+    
+    const allCols = cls.docs.map(d => ({ id: d.id, ...d.data() }));
+    allCols.sort((a,b) => (a.order || 0) - (b.order || 0));
+    setCollections(allCols);
+
+    const allSections = hps.docs.map(d => ({ id: d.id, ...d.data() }));
+    allSections.sort((a,b) => (a.order || 0) - (b.order || 0));
+    setSections(allSections);
+
     setBanners(bs.docs.map(d => ({ id: d.id, ...d.data() })));
     ss.docs.forEach(d => { if (d.id === 'global') setSettings(d.data()); });
   };
@@ -466,6 +476,20 @@ export default function AdminPage() {
     await loadAll(); setLoading(false);
   };
 
+  const updateSectionOrder = async (newSections) => {
+    setSections(newSections);
+    for (let i = 0; i < newSections.length; i++) {
+      await setDoc(doc(db, 'homepage_sections', newSections[i].id), { ...newSections[i], order: i });
+    }
+  };
+
+  const addHomeSection = async (type) => {
+    const id = `sec_${Date.now()}`;
+    const newSec = { id, type, title: type.replace('_', ' '), order: sections.length, active: true };
+    await setDoc(doc(db, 'homepage_sections', id), newSec);
+    loadAll();
+  };
+
   const saveSettings = async e => {
     e.preventDefault(); setLoading(true);
     await setDoc(doc(db,'settings','global'), settings);
@@ -537,9 +561,8 @@ export default function AdminPage() {
   };
   const tabs = [
     {id:'produtos',      label:'Produtos',      icon:'apparel'},
-    {id:'colecoes',      label:'Coleções',      icon:'auto_awesome_motion'},
+    {id:'personalizar',  label:'Personalizar',  icon:'dashboard_customize'},
     {id:'categorias',    label:'Categorias',    icon:'category'},
-    {id:'banners',       label:'Banners',       icon:'photo_library'},
     {id:'configuracoes', label:'Config',        icon:'settings'},
   ];
 
@@ -937,6 +960,199 @@ export default function AdminPage() {
           </div>
         )}
 
+        {/* ══ PERSONALIZAR (VIsual Builder) ══ */}
+        {activeTab==='personalizar' && (
+          <div className="grid grid-cols-12 gap-8">
+            {/* Esquerda: Editor de Seções */}
+            <div className="col-span-4 flex flex-col gap-6">
+              <div className="p-6 rounded-2xl bg-[#111] border border-[#222]">
+                <h3 className="font-black uppercase tracking-tighter text-sm mb-5">Menu de Coleções (Banners/Sessões)</h3>
+                <form onSubmit={addCollection} className="flex flex-col gap-3 mb-6 p-4 rounded-xl border border-dashed border-[#333]">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-[#555] mb-2">Novo Banner / Coleção</p>
+                  <input required placeholder="Título (ex: Summer 24)" value={newCollection.title} onChange={e=>setNewCollection({...newCollection,title:e.target.value})} className={inp}/>
+                  <input placeholder="Subtítulo" value={newCollection.subtitle} onChange={e=>setNewCollection({...newCollection,subtitle:e.target.value})} className={inp}/>
+                  <input placeholder="Link" value={newCollection.link} onChange={e=>setNewCollection({...newCollection,link:e.target.value})} className={inp}/>
+                  <div className="relative p-4 rounded-lg flex flex-col items-center gap-1 cursor-pointer transition-all border border-[#2a2a2a] bg-[#0a0a0a]"
+                    style={{borderColor:file?G:'#2a2a2a'}}>
+                    <span className="material-symbols-outlined text-xl text-[#333]">image</span>
+                    <p className="text-[9px] font-black tracking-widest text-[#444] uppercase">{file?file.name:'Upload Foto'}</p>
+                    <input type="file" accept="image/*" onChange={e=>setFile(e.target.files[0])} className="absolute inset-0 opacity-0 cursor-pointer"/>
+                  </div>
+                  <button type="submit" disabled={loading} className="py-3 rounded-lg text-black font-black text-[10px] uppercase tracking-widest mt-1" style={{background:G}}>
+                    {loading?'Criando...':'+ Criar Coleção'}
+                  </button>
+                </form>
+
+                <div className="flex flex-col gap-2 max-h-[40vh] overflow-y-auto pr-2">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-green-500 mb-2">Coleções Ativas</p>
+                  {collections.map((col, idx) => (
+                    <div key={col.id} className="flex items-center gap-3 p-2 rounded-xl bg-[#1a1a1a] border border-[#2a2a2a] group cursor-default">
+                       <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-black">
+                         {col.image && <img src={col.image} className="w-full h-full object-cover" />}
+                       </div>
+                       <div className="flex-1 min-w-0">
+                         <p className="font-black text-[10px] uppercase truncate">{col.title}</p>
+                         <div className="flex items-center gap-2 mt-0.5">
+                           <button onClick={()=>{
+                             const next = [...collections];
+                             if(idx > 0) {
+                               [next[idx-1], next[idx]] = [next[idx], next[idx-1]];
+                               setCollections(next);
+                               next.forEach((c, i) => setDoc(doc(db, 'collections', c.id), { ...c, order: i }));
+                             }
+                           }} className="text-[10px] text-[#555] hover:text-white transition-colors">↑</button>
+                           <button onClick={()=>{
+                             const next = [...collections];
+                             if(idx < next.length-1) {
+                               [next[idx], next[idx+1]] = [next[idx+1], next[idx]];
+                               setCollections(next);
+                               next.forEach((c, i) => setDoc(doc(db, 'collections', c.id), { ...c, order: i }));
+                             }
+                           }} className="text-[10px] text-[#555] hover:text-white transition-colors">↓</button>
+                         </div>
+                       </div>
+                       <button onClick={()=>remove('collections', col.id)} className="p-2 opacity-0 group-hover:opacity-100 text-red-500 hover:bg-red-500 hover:text-white rounded-lg transition-all">
+                         <span className="material-symbols-outlined text-sm">delete</span>
+                       </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="p-6 rounded-2xl bg-[#111] border border-[#222]">
+                <h3 className="font-black uppercase tracking-tighter text-sm mb-4">Estrutura da Home (Preview)</h3>
+                <p className="text-[9px] font-bold uppercase tracking-widest text-[#444] mb-4">Organize a ordem do rascunho</p>
+                
+                <div className="flex flex-col gap-2">
+                  {sections.length === 0 && (
+                     <button onClick={()=>addHomeSection('HERO')} className="py-3 border-2 border-dashed border-[#222] rounded-xl text-[10px] font-bold text-[#444] uppercase hover:border-green-500 hover:text-green-500 transition-all">
+                       Começar a montar (Add Hero)
+                     </button>
+                  )}
+                  {sections.map((sec, idx) => (
+                    <div key={sec.id} className="flex items-center gap-3 p-3 rounded-xl bg-[#0a0a0a] border border-[#2a2a2a] group">
+                      <div className="flex flex-col gap-1 pr-2 border-r border-[#222]">
+                        <button onClick={()=>{
+                          const next = [...sections];
+                          if(idx > 0) { [next[idx-1], next[idx]] = [next[idx], next[idx-1]]; updateSectionOrder(next); }
+                        }} className="text-xs text-[#444] hover:text-white transition-colors">▲</button>
+                        <button onClick={()=>{
+                          const next = [...sections];
+                          if(idx < next.length-1) { [next[idx], next[idx+1]] = [next[idx+1], next[idx]]; updateSectionOrder(next); }
+                        }} className="text-xs text-[#444] hover:text-white transition-colors">▼</button>
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-black text-[11px] uppercase tracking-tighter">{sec.title}</p>
+                        <p className="text-[8px] font-bold text-green-500/50 uppercase tracking-[0.2em]">{sec.type}</p>
+                      </div>
+                      <button onClick={()=>remove('homepage_sections', sec.id)} className="p-2 text-red-500/20 group-hover:text-red-500 transition-colors">
+                        <span className="material-symbols-outlined text-xs">close</span>
+                      </button>
+                    </div>
+                  ))}
+                  <div className="grid grid-cols-2 gap-2 mt-4">
+                    <button onClick={()=>addHomeSection('HERO')} className="py-2 rounded-lg bg-[#1a1a1a] text-[9px] font-black uppercase tracking-widest border border-[#222] hover:bg-green-500 hover:text-black transition-all">Add Banner (Hero)</button>
+                    <button onClick={()=>addHomeSection('CATEGORIES')} className="py-2 rounded-lg bg-[#1a1a1a] text-[9px] font-black uppercase tracking-widest border border-[#222] hover:bg-green-500 hover:text-black transition-all">Add Categorias</button>
+                    <button onClick={()=>addHomeSection('PRODUCTS_GRID')} className="py-2 rounded-lg bg-[#1a1a1a] text-[9px] font-black uppercase tracking-widest border border-[#222] hover:bg-green-500 hover:text-black transition-all">Add Produtos</button>
+                    <button onClick={()=>addHomeSection('COLLECTIONS_LIST')} className="py-2 rounded-lg bg-[#1a1a1a] text-[9px] font-black uppercase tracking-widest border border-[#222] hover:bg-green-500 hover:text-black transition-all">Add Links Coleção</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Direita: Preview Draft */}
+            <div className="col-span-8 bg-[#000] rounded-3xl border border-[#222] overflow-hidden flex flex-col relative" style={{height:'85vh'}}>
+              <div className="absolute top-0 w-full z-10 bg-black/95 px-6 py-4 border-b border-[#111] flex justify-between items-center">
+                 <p className="text-[10px] font-black uppercase tracking-widest text-[#444]">Rascunho Visual · Preview</p>
+                 <div className="flex items-center gap-2">
+                   <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                   <span className="text-[9px] font-bold uppercase text-green-500">Live Draft</span>
+                 </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto mt-[50px] p-6 bg-[#000]">
+                {/* O rascunho renderiza as sessões na ordem */}
+                <div className="max-w-md mx-auto flex flex-col gap-10">
+                  {sections.length === 0 && (
+                    <div className="h-full flex items-center justify-center py-40">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-[#222]">Adicione uma sessão para começar o rascunho</p>
+                    </div>
+                  )}
+                  {sections.map(sec => (
+                    <div key={sec.id} className="relative group/view">
+                      <div className="absolute -left-8 top-0 h-full w-[1px] bg-[#1a1a1a]" />
+                      
+                      {sec.type === 'HERO' && (
+                        <div className="aspect-[4/5] w-full rounded-sm overflow-hidden bg-neutral-900 border border-[#222] flex flex-col justify-end p-6">
+                           {collections[0] ? (
+                             <img src={collections[0].image} className="absolute inset-0 w-full h-full object-cover opacity-50" />
+                           ) : <div className="absolute inset-0 bg-[#111]" />}
+                           <div className="relative z-10">
+                              <p className="text-[8px] font-bold text-white/40 uppercase tracking-[0.3em] mb-1">{collections[0]?.subtitle || 'SUBTITLE'}</p>
+                              <h4 className="text-3xl font-black text-white uppercase tracking-tighter leading-[0.8]">{collections[0]?.title || 'HERO TITLE'}</h4>
+                           </div>
+                        </div>
+                      )}
+
+                      {sec.type === 'CATEGORIES' && (
+                        <div className="flex flex-col gap-4">
+                           <p className="text-[8px] font-bold uppercase tracking-[0.3em] text-[#444]">Navegar por</p>
+                           <div className="flex gap-2 overflow-x-hidden">
+                              {[1,2,3,4].map(i => (
+                                <div key={i} className="w-20 h-20 shrink-0 bg-[#0e0e0e] rounded-lg border border-[#111] flex items-center justify-center">
+                                  <div className="w-8 h-8 rounded-full bg-[#111]" />
+                                </div>
+                              ))}
+                           </div>
+                        </div>
+                      )}
+
+                      {sec.type === 'PRODUCTS_GRID' && (
+                        <div className="flex flex-col gap-6">
+                           <div className="flex justify-between items-end">
+                             <h4 className="text-xl font-black text-white uppercase tracking-tighter">Destaques</h4>
+                             <span className="text-[8px] font-bold uppercase border-b border-white pb-0.5">Ver Tudo</span>
+                           </div>
+                           <div className="grid grid-cols-2 gap-2">
+                              {[1,2,3,4].map(i => (
+                                <div key={i} className="flex flex-col gap-2">
+                                  <div className="aspect-square bg-[#0e0e0e] rounded-lg border border-[#111]" />
+                                  <div className="h-2 w-16 bg-[#111] rounded" />
+                                  <div className="h-2 w-10 bg-[#0e0e0e] rounded" />
+                                </div>
+                              ))}
+                           </div>
+                        </div>
+                      )}
+
+                      {sec.type === 'COLLECTIONS_LIST' && (
+                        <div className="flex flex-col gap-6">
+                           <p className="text-[8px] font-bold uppercase tracking-[0.3em] text-[#444]">Explorar Coleções</p>
+                           <div className="flex gap-2 overflow-x-hidden">
+                              {collections.slice(1, 3).map(c => (
+                                <div key={c.id} className="min-w-[200px] h-[120px] bg-[#0e0e0e] rounded-sm border border-[#111] overflow-hidden relative">
+                                  {c.image && <img src={c.image} className="absolute inset-0 w-full h-full object-cover opacity-30" />}
+                                  <div className="absolute inset-0 p-3 flex flex-col justify-end">
+                                    <p className="text-[8px] font-black text-white/50 uppercase">{c.subtitle}</p>
+                                    <h5 className="text-sm font-black text-white uppercase">{c.title}</h5>
+                                  </div>
+                                </div>
+                              ))}
+                           </div>
+                        </div>
+                      )}
+
+                      <div className="absolute top-0 right-0 p-2 opacity-0 group-hover/view:opacity-100 transition-opacity">
+                         <span className="px-2 py-1 rounded bg-green-500 text-[8px] font-black text-black uppercase tracking-widest shadow-xl">Visible</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
         {/* ══ CATEGORIAS (com DND real) ══ */}
         {activeTab==='categorias' && (
           <div className="flex flex-col gap-5">
