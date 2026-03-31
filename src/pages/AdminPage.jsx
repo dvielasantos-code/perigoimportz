@@ -1061,92 +1061,120 @@ export default function AdminPage() {
             </div>
 
             {/* Direita: Preview Draft */}
-            <div className="col-span-8 bg-[#000] rounded-3xl border border-[#222] overflow-hidden flex flex-col relative" style={{height:'85vh'}}>
+            <div className="col-span-8 bg-[#000] rounded-3xl border border-[#222] overflow-hidden flex flex-col relative shadow-2xl" style={{height:'85vh'}}>
               <div className="absolute top-0 w-full z-10 bg-black/95 px-6 py-4 border-b border-[#111] flex justify-between items-center">
-                 <p className="text-[10px] font-black uppercase tracking-widest text-[#444]">Rascunho Visual · Preview</p>
+                 <div className="flex items-center gap-4">
+                   <div className="flex flex-col gap-1">
+                     <div className="w-4 h-[2px] bg-white" />
+                     <div className="w-4 h-[2px] bg-white" />
+                     <div className="w-4 h-[2px] bg-white" />
+                   </div>
+                   <p className="text-[11px] font-black uppercase tracking-tighter text-white">PERIGOIMPORTZ</p>
+                 </div>
                  <div className="flex items-center gap-2">
                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                    <span className="text-[9px] font-bold uppercase text-green-500">Live Draft</span>
                  </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto mt-[50px] p-6 bg-[#000]">
+              <div className="flex-1 overflow-y-auto mt-[50px] bg-[#000] scroll-smooth">
                 {/* O rascunho renderiza as sessões na ordem */}
-                <div className="max-w-md mx-auto flex flex-col gap-10">
-                  {sections.length === 0 && (
-                    <div className="h-full flex items-center justify-center py-40">
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-[#222]">Adicione uma sessão para começar o rascunho</p>
-                    </div>
-                  )}
-                  {sections.map(sec => (
+                <div className="max-w-md mx-auto flex flex-col gap-12 pb-20">
+                  {(sections.length > 0 ? sections : [
+                    { id: 'def-hero', type: 'HERO' },
+                    { id: 'def-cats', type: 'CATEGORIES' },
+                    { id: 'def-prod', type: 'PRODUCTS_GRID' }
+                  ]).map(sec => (
                     <div key={sec.id} className="relative group/view">
                       <div className="absolute -left-8 top-0 h-full w-[1px] bg-[#1a1a1a]" />
                       
                       {sec.type === 'HERO' && (
-                        <div className="aspect-[4/5] w-full rounded-sm overflow-hidden bg-neutral-900 border border-[#222] flex flex-col justify-end p-6">
+                        <div className="aspect-[4/5] w-full rounded-b-sm overflow-hidden bg-neutral-900 border border-[#222] flex flex-col justify-end p-8 relative shadow-2xl">
                            {collections[0] ? (
-                             <img src={collections[0].image} className="absolute inset-0 w-full h-full object-cover opacity-50" />
-                           ) : <div className="absolute inset-0 bg-[#111]" />}
+                             <img src={collections[0].image} className="absolute inset-0 w-full h-full object-cover opacity-60" />
+                           ) : <div className="absolute inset-0 bg-neutral-800" />}
                            <div className="relative z-10">
-                              <p className="text-[8px] font-bold text-white/40 uppercase tracking-[0.3em] mb-1">{collections[0]?.subtitle || 'SUBTITLE'}</p>
-                              <h4 className="text-3xl font-black text-white uppercase tracking-tighter leading-[0.8]">{collections[0]?.title || 'HERO TITLE'}</h4>
+                              <p className="text-[9px] font-bold text-white/40 uppercase tracking-[0.4em] mb-2 font-['Inter']">{collections[0]?.subtitle || 'DROP 24'}</p>
+                              <h4 className="text-4xl font-black text-white uppercase tracking-tighter leading-[0.8] mb-6 font-['Manrope']">{collections[0]?.title || 'NEW COLLECTION'}</h4>
+                              <div className="w-24 h-10 bg-neon-green rounded-sm shadow-xl shadow-neon-green/20" />
                            </div>
                         </div>
                       )}
 
                       {sec.type === 'CATEGORIES' && (
-                        <div className="flex flex-col gap-4">
-                           <p className="text-[8px] font-bold uppercase tracking-[0.3em] text-[#444]">Navegar por</p>
-                           <div className="flex gap-2 overflow-x-hidden">
-                              {[1,2,3,4].map(i => (
-                                <div key={i} className="w-20 h-20 shrink-0 bg-[#0e0e0e] rounded-lg border border-[#111] flex items-center justify-center">
-                                  <div className="w-8 h-8 rounded-full bg-[#111]" />
+                        <div className="flex flex-col gap-5 px-4 mt-4">
+                           <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/20 font-['Inter']">Navegar por</p>
+                           <div className="flex gap-3 overflow-x-hidden">
+                              {categories.length > 0 ? categories.slice(0, 4).map(cat => (
+                                <div key={cat.id} className="w-20 h-20 shrink-0 bg-[#0e0e0e] rounded-xl border border-white/5 flex flex-col items-center justify-center p-2 shadow-lg">
+                                   <CustomIcon name={cat.icon} className="w-6 h-6 mb-1 text-white/40" />
+                                   <span className="text-[8px] font-bold text-white/40 uppercase truncate w-full text-center font-['Inter']">{cat.name}</span>
                                 </div>
+                              )) : [1,2,3,4].map(i => (
+                                <div key={i} className="w-20 h-20 shrink-0 bg-[#0a0a0a] rounded-xl border border-white/5" />
                               ))}
                            </div>
                         </div>
                       )}
 
                       {sec.type === 'PRODUCTS_GRID' && (
-                        <div className="flex flex-col gap-6">
-                           <div className="flex justify-between items-end">
-                             <h4 className="text-xl font-black text-white uppercase tracking-tighter">Destaques</h4>
-                             <span className="text-[8px] font-bold uppercase border-b border-white pb-0.5">Ver Tudo</span>
-                           </div>
-                           <div className="grid grid-cols-2 gap-2">
-                              {[1,2,3,4].map(i => (
-                                <div key={i} className="flex flex-col gap-2">
-                                  <div className="aspect-square bg-[#0e0e0e] rounded-lg border border-[#111]" />
-                                  <div className="h-2 w-16 bg-[#111] rounded" />
-                                  <div className="h-2 w-10 bg-[#0e0e0e] rounded" />
-                                </div>
-                              ))}
-                           </div>
-                        </div>
-                      )}
-
-                      {sec.type === 'COLLECTIONS_LIST' && (
-                        <div className="flex flex-col gap-6">
-                           <p className="text-[8px] font-bold uppercase tracking-[0.3em] text-[#444]">Explorar Coleções</p>
-                           <div className="flex gap-2 overflow-x-hidden">
-                              {collections.slice(1, 3).map(c => (
-                                <div key={c.id} className="min-w-[200px] h-[120px] bg-[#0e0e0e] rounded-sm border border-[#111] overflow-hidden relative">
-                                  {c.image && <img src={c.image} className="absolute inset-0 w-full h-full object-cover opacity-30" />}
-                                  <div className="absolute inset-0 p-3 flex flex-col justify-end">
-                                    <p className="text-[8px] font-black text-white/50 uppercase">{c.subtitle}</p>
-                                    <h5 className="text-sm font-black text-white uppercase">{c.title}</h5>
+                        <div className="flex flex-col gap-8 px-4 mt-8">
+                             <div className="flex justify-between items-end">
+                               <h4 className="text-2xl font-black text-white uppercase tracking-tighter font-['Manrope']">Destaques</h4>
+                               <span className="text-[9px] font-bold uppercase border-b border-white/20 text-white/20 pb-0.5 font-['Inter']">Ver Tudo</span>
+                             </div>
+                             <div className="grid grid-cols-2 gap-4">
+                                {products.length > 0 ? products.slice(0, 4).map(p => (
+                                  <div key={p.id} className="flex flex-col gap-3 group">
+                                    <div className="aspect-square bg-[#0e0e0e] rounded-sm border border-white/5 overflow-hidden shadow-inner relative">
+                                       <img src={p.image} className="w-full h-full object-cover opacity-50 transition-transform group-hover:scale-105" />
+                                       <div className="absolute inset-x-0 bottom-0 p-2">
+                                          <div className="h-1 w-full bg-neon-green/20" />
+                                       </div>
+                                    </div>
+                                    <div className="flex flex-col gap-1 px-0.5">
+                                      <div className="h-2 w-full bg-white/10 rounded" />
+                                      <div className="h-2 w-1/2 bg-white/5 rounded" />
+                                    </div>
                                   </div>
-                                </div>
-                              ))}
-                           </div>
-                        </div>
-                      )}
+                                )) : [1,2,3,4].map(i => (
+                                  <div key={i} className="flex flex-col gap-2">
+                                    <div className="aspect-square bg-[#0e0e0e] rounded-sm border border-white/5 shadow-inner" />
+                                    <div className="h-2 w-16 bg-white/5 rounded" />
+                                  </div>
+                                ))}
+                             </div>
+                          </div>
+                        )}
 
-                      <div className="absolute top-0 right-0 p-2 opacity-0 group-hover/view:opacity-100 transition-opacity">
-                         <span className="px-2 py-1 rounded bg-green-500 text-[8px] font-black text-black uppercase tracking-widest shadow-xl">Visible</span>
+                        {sec.type === 'COLLECTIONS_LIST' && (
+                          <div className="flex flex-col gap-6 px-4 mt-8">
+                             <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/20 font-['Inter']">Coleções</p>
+                             <div className="flex gap-3 overflow-x-hidden pb-4">
+                                {collections.slice(1).map(c => (
+                                  <div key={c.id} className="min-w-[220px] h-[140px] bg-[#0e0e0e] rounded-sm border border-white/5 overflow-hidden relative shadow-2xl group">
+                                    {c.image && <img src={c.image} className="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:scale-105 transition-transform" />}
+                                    <div className="absolute inset-0 p-5 flex flex-col justify-end bg-gradient-to-t from-black/80 to-transparent">
+                                      <p className="text-[8px] font-black text-white/40 uppercase tracking-widest mb-1 font-['Inter']">{c.subtitle}</p>
+                                      <h5 className="text-xl font-black text-white uppercase tracking-tighter font-['Manrope']">{c.title}</h5>
+                                    </div>
+                                  </div>
+                                ))}
+                             </div>
+                          </div>
+                        )}
+
+                        <div className="absolute top-0 right-0 p-2 opacity-0 group-hover/view:opacity-100 transition-opacity">
+                           <span className="px-2 py-1 rounded bg-green-500 text-[8px] font-black text-black uppercase tracking-widest shadow-xl">Live</span>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  
+                  {/* Mock Footer */}
+                  <div className="mt-16 px-8 py-20 bg-[#0e0e0e] rounded-t-3xl border-t border-white/5 text-center shadow-2xl relative">
+                     <p className="text-[11px] font-black text-white/30 uppercase tracking-[0.4em] font-['Manrope']">PERIGOIMPORTZ</p>
+                     <p className="text-[8px] font-bold text-white/10 mt-6 uppercase tracking-widest font-['Inter']">© 2024 · All Rights Reserved</p>
+                  </div>
                 </div>
               </div>
             </div>

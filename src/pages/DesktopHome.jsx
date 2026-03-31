@@ -34,25 +34,21 @@ export default function DesktopHome() {
 
       {/* Banner */}
       <main className="pt-[88px]">
-        {(!data.sections || data.sections.length === 0) ? (
-          <section className="mb-20">
-            <div className="relative w-full aspect-video md:aspect-[21/7] overflow-hidden group bg-neutral-900">
-              <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBR8WfMT6yGX8Qp6mJAVYg4ZjzaURdfQ-4zQd6vFb2NvbMfMnRBo7I0ns1KZWn9BM1gp0zL4yRZrecudGHQD6MmyPSkq_ZLz89njFzqG77SqTXrzWKJqNpgM2fSIOYakZes1Jfki-FpOEBZXCfcyhHm1AowjgI7Polcfjg1w-YDkXUMAGeu9WCJND6amT-tEGaLzglsjQ8NITY8zjItt-DvEiUJioZeOSfH37_TTJ80Z37s9Cng8j4kfiTUvX-SJDCPFNaDXIvmafg9" className="w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-12">
-                <span className="font-['Inter'] text-sm tracking-[0.2em] uppercase text-white/70 mb-4 font-medium">Arquivo 2024</span>
-                <h2 className="text-6xl md:text-8xl font-black tracking-tighter text-white mb-6 uppercase leading-[0.9]">ESSENCIAIS<br/>OBSCUROS</h2>
-                <div className="px-5 py-4 bg-black/40 backdrop-blur rounded-lg w-fit mt-4">
-                    <p className="text-xs font-bold text-white uppercase tracking-widest">Acesse o Admin Studio para personalizar este rascunho</p>
-                </div>
-              </div>
-            </div>
-          </section>
-        ) : (
-          data.sections.map(sec => {
+        {(() => {
+          const sectionsToRender = (data.sections && data.sections.length > 0) 
+            ? data.sections 
+            : [
+                { id: 'def-hero', type: 'HERO' },
+                { id: 'def-cats', type: 'CATEGORIES' },
+                { id: 'def-cols', type: 'COLLECTIONS_LIST' },
+                { id: 'def-prod', type: 'PRODUCTS_GRID' }
+              ];
+
+          return sectionsToRender.map(sec => {
             if(sec.type === 'HERO') return (
               <section key={sec.id} className="mb-20">
                 <div className="relative w-full aspect-video md:aspect-[21/7] overflow-hidden group bg-neutral-900 shadow-2xl">
-                  {data.collections?.[0] ? (
+                  {data.collections?.length > 0 ? (
                     <>
                       <img src={data.collections[0].image} 
                            alt={data.collections[0].title} 
@@ -64,7 +60,14 @@ export default function DesktopHome() {
                       </div>
                     </>
                   ) : (
-                    <div className="flex items-center justify-center aspect-[21/7] bg-[#111] text-white/20 uppercase font-black text-2xl">Defina uma Coleção no Admin</div>
+                    <>
+                      <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBR8WfMT6yGX8Qp6mJAVYg4ZjzaURdfQ-4zQd6vFb2NvbMfMnRBo7I0ns1KZWn9BM1gp0zL4yRZrecudGHQD6MmyPSkq_ZLz89njFzqG77SqTXrzWKJqNpgM2fSIOYakZes1Jfki-FpOEBZXCfcyhHm1AowjgI7Polcfjg1w-YDkXUMAGeu9WCJND6amT-tEGaLzglsjQ8NITY8zjItt-DvEiUJioZeOSfH37_TTJ80Z37s9Cng8j4kfiTUvX-SJDCPFNaDXIvmafg9" className="w-full h-full object-cover opacity-60" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-12">
+                        <span className="font-['Inter'] text-sm tracking-[0.2em] uppercase text-white/70 mb-4 font-medium">Lançamento</span>
+                        <h2 className="text-6xl md:text-8xl font-black tracking-tighter text-white mb-6 uppercase leading-[0.9] font-['Manrope']">COLEÇÃO ATUAL</h2>
+                        <button className="bg-neon-green text-black px-10 py-4 rounded-sm font-bold text-sm tracking-widest uppercase hover:opacity-90 transition-all w-fit shadow-xl shadow-neon-green/20">Explorar</button>
+                      </div>
+                    </>
                   )}
                 </div>
               </section>
@@ -89,25 +92,30 @@ export default function DesktopHome() {
               </section>
             );
 
-            if(sec.type === 'COLLECTIONS_LIST' && data.collections?.length > 1) return (
-              <section key={sec.id} className="px-8 mb-32">
-                <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-white/50 mb-8 font-['Inter']">Coleções em Destaque</h3>
-                <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
-                  {data.collections.slice(1, 4).map(col => (
-                    <div key={col.id} 
-                      onClick={() => navigate(col.link || '#')}
-                      className="relative aspect-[16/9] rounded-sm overflow-hidden group cursor-pointer bg-neutral-900 border border-white/5 shadow-2xl"
-                    >
-                      <img src={col.image} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                      <div className="absolute inset-0 bg-black/40 p-10 flex flex-col justify-end">
-                        <p className="text-xs font-bold text-white/60 uppercase tracking-[0.2em] mb-2">{col.subtitle}</p>
-                        <h4 className="text-4xl font-black text-white uppercase tracking-tighter leading-none">{col.title}</h4>
+            if(sec.type === 'COLLECTIONS_LIST') {
+              const colsToShow = data.collections?.length > 1 ? data.collections.slice(1, 4) : [];
+              return (
+                <section key={sec.id} className="px-8 mb-32">
+                  <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-white/50 mb-8 font-['Inter']">Coleções em Destaque</h3>
+                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
+                    {colsToShow.length > 0 ? colsToShow.map(col => (
+                      <div key={col.id} 
+                        onClick={() => navigate(col.link || '#')}
+                        className="relative aspect-[16/9] rounded-sm overflow-hidden group cursor-pointer bg-neutral-900 border border-white/5 shadow-2xl"
+                      >
+                        <img src={col.image} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                        <div className="absolute inset-0 bg-black/40 p-10 flex flex-col justify-end">
+                          <p className="text-xs font-bold text-white/60 uppercase tracking-[0.2em] mb-2">{col.subtitle}</p>
+                          <h4 className="text-4xl font-black text-white uppercase tracking-tighter leading-none">{col.title}</h4>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            );
+                    )) : (
+                      [1,2,3].map(i => <div key={i} className="aspect-[16/9] bg-neutral-900/40 rounded-sm border border-dashed border-white/5" />)
+                    )}
+                  </div>
+                </section>
+              );
+            }
 
             if(sec.type === 'PRODUCTS_GRID') return (
               <section key={sec.id} className="px-8 mb-32">
@@ -149,10 +157,10 @@ export default function DesktopHome() {
                   ))}
                 </div>
               </section>
-            );
-            return null;
+            )
+            return null
           })
-        )}
+        })()}
       </main>
 
       {/* Footer */}

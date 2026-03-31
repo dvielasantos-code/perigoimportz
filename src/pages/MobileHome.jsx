@@ -31,29 +31,21 @@ export default function MobileHome() {
 
         {/* Banner mobile - Hero dinâmico */}
         <main className="pt-[68px] overflow-x-hidden">
-            {/* Se não houver sessões definidas no admin, mostramos uma ordem padrão fallback */}
-            {(!data.sections || data.sections.length === 0) ? (
-              <>
-                 <section className="mb-10 px-0">
-                    <div className="relative w-full aspect-[4/5] rounded-b-sm overflow-hidden group bg-neutral-900 shadow-2xl">
-                        <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBdso03s2h1V8LfKMtiajCAAMOq8t0GfkW8B4cTVQeQO29ytbjJfXzkkYkfIOwWCOMCyN_PV81XZfRNn6deAxRSdOrSRh8P3ZvBFwd5phxoW3KWlygiW6vJGPAaO8j2S1IvWzuKpbwF-UGFHIyUXuU6xzn3lsa9pQxb03y0T7rXzXgFH4K00IYnefqSNR-SIYCJMbdGHoE-_DzEZcmITZZwHfzHQRwA-4qFB6KRIBMNNdZTdwXrkozGQke_Q_FOZdSfHWE5FaCosrgd" className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-transparent p-10 flex flex-col justify-end">
-                           <span className="text-white/40 text-[9px] font-bold tracking-[.4em] mb-2 uppercase">Arquivo 2024</span>
-                           <h2 className="text-4xl font-black text-white uppercase tracking-tighter leading-[0.8] mb-6">ESSENCIAIS<br/>URBANOS</h2>
-                           <button className="bg-neon-green text-black font-black py-4 px-10 rounded-sm w-fit text-[11px] uppercase tracking-widest shadow-2xl shadow-neon-green/30">Explorar</button>
-                        </div>
-                    </div>
-                </section>
-                <div className="px-5 py-4 text-center">
-                    <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Acesse o Admin Studio para personalizar este rascunho</p>
-                </div>
-              </>
-            ) : (
-              data.sections.map((sec, idx) => {
+            {(() => {
+              const sectionsToRender = (data.sections && data.sections.length > 0) 
+                ? data.sections 
+                : [
+                    { id: 'def-hero', type: 'HERO' },
+                    { id: 'def-cats', type: 'CATEGORIES' },
+                    { id: 'def-cols', type: 'COLLECTIONS_LIST' },
+                    { id: 'def-prod', type: 'PRODUCTS_GRID' }
+                  ];
+
+              return sectionsToRender.map((sec) => {
                 if(sec.type === 'HERO') return (
                   <section key={sec.id} className="mb-10 px-0">
                       <div className="relative w-full aspect-[4/5] rounded-b-sm overflow-hidden group bg-neutral-900 shadow-2xl">
-                          {data.collections?.[0] ? (
+                          {data.collections?.length > 0 ? (
                             <>
                               <img src={data.collections[0].image} 
                                    alt={data.collections[0].title} 
@@ -65,7 +57,14 @@ export default function MobileHome() {
                               </div>
                             </>
                           ) : (
-                            <div className="flex items-center justify-center h-full bg-[#111] text-white/20 uppercase font-black text-xs">Crie uma Coleção no Admin</div>
+                            <>
+                                <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBdso03s2h1V8LfKMtiajCAAMOq8t0GfkW8B4cTVQeQO29ytbjJfXzkkYkfIOwWCOMCyN_PV81XZfRNn6deAxRSdOrSRh8P3ZvBFwd5phxoW3KWlygiW6vJGPAaO8j2S1IvWzuKpbwF-UGFHIyUXuU6xzn3lsa9pQxb03y0T7rXzXgFH4K00IYnefqSNR-SIYCJMbdGHoE-_DzEZcmITZZwHfzHQRwA-4qFB6KRIBMNNdZTdwXrkozGQke_Q_FOZdSfHWE5FaCosrgd" className="w-full h-full object-cover opacity-60" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-transparent p-10 flex flex-col justify-end">
+                                   <span className="text-white/40 text-[9px] font-bold tracking-[.4em] mb-2 uppercase">Arquivo 2024</span>
+                                   <h2 className="text-4xl font-black text-white uppercase tracking-tighter leading-[0.8] mb-6 font-['Manrope']">Destaque Semanal</h2>
+                                   <button className="bg-neon-green text-black font-black py-4 px-10 rounded-sm w-fit text-[11px] uppercase tracking-widest shadow-2xl shadow-neon-green/30">Explorar</button>
+                                </div>
+                            </>
                           )}
                       </div>
                   </section>
@@ -81,7 +80,7 @@ export default function MobileHome() {
                                 <div 
                                   key={cat.id} 
                                   onClick={() => navigate(`/categoria/${cat.id}`)}
-                                  className="min-w-[100px] shrink-0 flex flex-col items-center justify-center p-4 bg-surface-container-low rounded-lg aspect-square text-center active:bg-surface-container-high transition-colors cursor-pointer"
+                                  className="min-w-[100px] shrink-0 flex flex-col items-center justify-center p-4 bg-surface-container-low rounded-lg aspect-square text-center active:bg-surface-container-high transition-colors cursor-pointer border border-white/5"
                                 >
                                     <CustomIcon name={cat.icon} className="mb-2 text-white w-6 h-6" />
                                     <span className="text-[10px] font-bold uppercase tracking-tight text-white/90">{cat.name}</span>
@@ -91,28 +90,35 @@ export default function MobileHome() {
                     </section>
                 );
 
-                if(sec.type === 'COLLECTIONS_LIST' && data.collections?.length > 1) return (
-                  <section key={sec.id} className="mb-14 px-4">
-                      <div className="flex items-baseline justify-between mb-5">
-                         <h3 className="text-[11px] font-bold uppercase tracking-[.3em] text-white/50 px-1 font-['Inter']">Explorar Coleções</h3>
-                      </div>
-                      <AutoCarousel speed={0.2} gap={12}>
-                          {data.collections.slice(1).map(col => (
-                              <div 
-                                key={col.id} 
-                                onClick={() => navigate(col.link || '#')}
-                                className="min-w-[280px] h-[200px] shrink-0 relative rounded-sm overflow-hidden bg-neutral-900 cursor-pointer group"
-                              >
-                                  <img src={col.image} className="w-full h-full object-cover transition-transform group-active:scale-105" />
-                                  <div className="absolute inset-0 bg-black/40 p-4 flex flex-col justify-end">
-                                      <p className="text-[9px] font-bold text-white/60 uppercase tracking-widest">{col.subtitle}</p>
-                                      <h4 className="text-xl font-black text-white uppercase tracking-tighter">{col.title}</h4>
-                                  </div>
-                              </div>
-                          ))}
-                      </AutoCarousel>
-                  </section>
-                );
+                if(sec.type === 'COLLECTIONS_LIST') {
+                  const colsToShow = data.collections?.length > 1 ? data.collections.slice(1) : [];
+                  return (
+                    <section key={sec.id} className="mb-14 px-4">
+                        <div className="flex items-baseline justify-between mb-5">
+                           <h3 className="text-[11px] font-bold uppercase tracking-[.3em] text-white/50 px-1 font-['Inter']">Explorar Coleções</h3>
+                        </div>
+                        <AutoCarousel speed={0.2} gap={12}>
+                            {colsToShow.length > 0 ? colsToShow.map(col => (
+                                <div 
+                                  key={col.id} 
+                                  onClick={() => navigate(col.link || '#')}
+                                  className="min-w-[280px] h-[200px] shrink-0 relative rounded-sm overflow-hidden bg-neutral-900 cursor-pointer group"
+                                >
+                                    <img src={col.image} className="w-full h-full object-cover transition-transform group-active:scale-105" />
+                                    <div className="absolute inset-0 bg-black/40 p-4 flex flex-col justify-end">
+                                        <p className="text-[9px] font-bold text-white/60 uppercase tracking-widest">{col.subtitle}</p>
+                                        <h4 className="text-xl font-black text-white uppercase tracking-tighter">{col.title}</h4>
+                                    </div>
+                                </div>
+                            )) : (
+                                [1,2].map(i => (
+                                    <div key={i} className="min-w-[280px] h-[200px] shrink-0 bg-neutral-900 animate-pulse rounded-sm opacity-20 border border-dashed border-white/10" />
+                                ))
+                            )}
+                        </AutoCarousel>
+                    </section>
+                  );
+                }
 
                 if(sec.type === 'PRODUCTS_GRID') return (
                   <section key={sec.id} className="mb-12 px-4 mt-8">
@@ -121,7 +127,7 @@ export default function MobileHome() {
                               <h3 className="text-2xl font-black tracking-tighter uppercase leading-none text-white">Destaques</h3>
                               <p className="text-white/50 text-xs mt-2 uppercase tracking-tight font-bold">Curadoria de Luxo</p>
                           </div>
-                          <span onClick={() => navigate('/categoria/todos')} className="text-[11px] font-bold uppercase tracking-widest border-b border-white pb-1 text-white/70">Ver todos</span>
+                          <span onClick={() => navigate('/categoria/todos')} className="text-[11px] font-bold uppercase tracking-widest border-b border-white pb-1 text-white/70 cursor-pointer">Ver todos</span>
                       </div>
 
                       <div className="grid grid-cols-2 gap-3">
@@ -154,8 +160,8 @@ export default function MobileHome() {
                   </section>
                 );
                 return null;
-              })
-            )}
+              });
+            })()}
         </main>
 
         <footer className="bg-[#0e0e0e] w-full rounded-t-xl mt-20 flex flex-col items-center px-10 py-16 text-center">
